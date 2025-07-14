@@ -1,0 +1,79 @@
+body {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background-color: #fcefdc;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+header {
+  background-color: #f7b731;
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 5px solid #e67e22;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #fff;
+  text-shadow: 1px 1px 2px #9b59b6;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.dragon-area {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.dragon-img {
+  width: 250px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+.hoard-zone {
+  width: 300px;
+  height: 150px;
+  border: 3px dashed #9b59b6;
+  background-color: #fff3e0;
+  line-height: 150px;
+  text-align: center;
+  font-weight: bold;
+  color: #9b59b6;
+  border-radius: 15px;
+}
+
+.treasure-area {
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.treasure-items {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.treasure {
+  width: 100px;
+  height: 100px;
+  cursor: grab;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  transition: transform 0.2s ease, border 0.2s ease;
+}
+
+.treasure:hover {
+  transform: scale(1.1);
+  border-color: #f39c12;
+}
