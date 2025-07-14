@@ -1,0 +1,33 @@
+{
+  "player": {
+    "dragon": "Smerd",
+    "hoard": [
+      "dinkles",
+      "syrupSoda",
+      "magicGum"
+    ]
+  },
+  "treasureTypes": {
+    "dinkles": {
+      "name": "Dinkles",
+      "category": "junkFood",
+      "rarity": "common",
+      "image": "assets/treasures/dinkles.png",
+      "description": "A sticky, sweet snack cake. Smerd can’t get enough!"
+    },
+    "syrupSoda": {
+      "name": "Triple Syrup Soda",
+      "category": "junkFood",
+      "rarity": "uncommon",
+      "image": "assets/treasures/syrup-soda.png",
+      "description": "Three times the sugar, three times the burp."
+    },
+    "magicGum": {
+      "name": "Magical Gum",
+      "category": "junkFood",
+      "rarity": "rare",
+      "image": "assets/treasures/magic-gum.png",
+      "description": "Endless chew, random flavors, possibly a portal opener."
+    }
+  }
+}
