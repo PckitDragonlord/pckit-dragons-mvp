@@ -103,15 +103,10 @@ firebase.auth().onAuthStateChanged(async (user) => {
       console.log("Loaded existing dragon:", dragonId);
       setSelectedDragonId(dragonDoc.id);
       selectedDragonId = dragonDoc.id;
-<<<<<<< HEAD
 
     }
 
 
-=======
-    }
-
->>>>>>> 73941cc2546bad55d5cc2dddd6fdfb0c16257cbf
     signInBtn.style.display = "none";
     signOutBtn.style.display = "inline-block";
     await displayHoard(dragonId);
@@ -215,10 +210,6 @@ async function displayHoard(dragonId = null) {
 
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 73941cc2546bad55d5cc2dddd6fdfb0c16257cbf
 // ====== Exploration Flow ======
 
 const zoneSelect = document.getElementById("zoneSelect");
@@ -582,16 +573,11 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
 
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 73941cc2546bad55d5cc2dddd6fdfb0c16257cbf
 // Initial load
 loadZones();
 displayHoard();
 loadOpponentOptions();
 
-<<<<<<< HEAD
 function calculateHoardScore(dragonData) {
   const hoard = dragonData.hoard || {};
   const dragonType = dragonData.type;
@@ -616,5 +602,3 @@ function calculateHoardScore(dragonData) {
 
 const score = calculateHoardScore(data);
 document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
-=======
->>>>>>> 73941cc2546bad55d5cc2dddd6fdfb0c16257cbf
