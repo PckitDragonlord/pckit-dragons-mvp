@@ -23,3 +23,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export { db };
+<<<<<<< HEAD
+=======
+
+>>>>>>> 73941cc2546bad55d5cc2dddd6fdfb0c16257cbf
