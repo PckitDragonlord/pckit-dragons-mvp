@@ -568,27 +568,6 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
 });
 
 
-async function loadDragons() {
-  const dragonSelect = document.getElementById("dragonSelect");
-  dragonSelect.innerHTML = "";  // clear existing options
-  
-  const snap = await db.collection("dragons").get();
-  snap.forEach(doc => {
-    const dragon = doc.data();
-    const option = document.createElement("option");
-    option.value = doc.id;
-    option.textContent = dragon.name || doc.id;
-    dragonSelect.appendChild(option);
-  });
-  
-  if (dragonSelect.options.length === 0) {
-    const option = document.createElement("option");
-    option.disabled = true;
-    option.textContent = "No dragons available.";
-    dragonSelect.appendChild(option);
-  }
-}
-
 
 // Initial load
 loadZones();
