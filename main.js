@@ -67,7 +67,6 @@ auth.onAuthStateChanged(async (user) => {
     }
 
     // Set selected dragon and show hoard
-    document.getElementById("dragonSelect").value = dragonId;
     await displayHoard();
 
   } else {
