@@ -600,5 +600,5 @@ function calculateHoardScore(dragonData) {
   return score;
 }
 
-const score = calculateHoardScore(data);
+const score = calculateHoardScore(dragonData);
 document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
