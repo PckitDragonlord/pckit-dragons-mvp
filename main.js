@@ -107,7 +107,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
     signInBtn.style.display = "none";
     signOutBtn.style.display = "inline-block";
-    await displayHoard();
+    await displayHoard(dragonId);
   } else {
     console.log("Signed out");
     setSelectedDragonId(null);
@@ -166,11 +166,14 @@ async function getHoardScore(dragonId) {
 // Display hoard
 // Display hoard with treasure names
 // Display hoard with treasure names
-async function displayHoard() {
+async function displayHoard(dragonId = null) {
   const hoardContainer = document.getElementById("hoard");
   hoardContainer.innerHTML = "";
 
-  const dragonId = getSelectedDragonId();
+  // Prefer passed-in dragonId; fall back to global getter if null
+  if (!dragonId) {
+    dragonId = getSelectedDragonId();
+  }
 
   if (!dragonId) {
     console.warn("No dragon selected. Skipping displayHoard.");
@@ -202,6 +205,7 @@ async function displayHoard() {
     console.error("Error fetching hoard:", error);
   }
 }
+
 
 
 
