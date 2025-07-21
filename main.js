@@ -101,8 +101,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
       console.log("Created new dragon for user:", dragonId);
     } else {
       console.log("Loaded existing dragon:", dragonId);
-      setSelectedDragonId(doc.id);
-      selectedDragonId = doc.id;
+      setSelectedDragonId(dragonDoc.id);
+      selectedDragonId = dragonDoc.id;
     }
 
     signInBtn.style.display = "none";
