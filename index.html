@@ -1,32 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>P'ckit Dragons MVP - Hoard Builder</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P'ckit Dragons MVP Test</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #4a2d91;
+    }
+    #hoard {
+      margin-top: 1em;
+    }
+    button {
+      margin-top: 1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      margin-bottom: 0.5em;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Build Smerd's Hoard</h1>
-  </header>
+  <h1>P'ckit Dragons MVP Test</h1>
+  <p>Open the browser console (F12) to view debug info and Firestore logs.</p>
+<div id="authSection">
+  <button id="signInBtn">Sign In with Google</button>
+  <button id="signOutBtn" style="display: none;">Sign Out</button>
+  <span id="userName" style="margin-left: 10px;"></span>
+</div>
 
-  <main>
-    <section class="dragon-area">
-      <img src="assets/dragons/smerd.png" alt="Smerd the Dragon" class="dragon-img">
-      <div class="hoard-zone" id="hoardZone">Drop treasures here!</div>
-    </section>
 
-    <section class="treasure-area">
-      <h2>Choose Your Treasures</h2>
-      <div class="treasure-items">
-        <img src="assets/treasures/dinkles.png" class="treasure" draggable="true" id="dinkles" alt="Dinkles">
-        <img src="assets/treasures/syrup-soda.png" class="treasure" draggable="true" id="syrupSoda" alt="Triple Syrup Soda">
-        <img src="assets/treasures/magic-gum.png" class="treasure" draggable="true" id="magicGum" alt="Magical Gum">
-      </div>
-    </section>
-  </main>
 
-  <script src="script.js"></script>
+<section id="explore">
+  <h2>Explore a Zone</h2>
+  <label for="zoneSelect">Choose Zone:</label>
+  <select id="zoneSelect"></select>
+  <button id="exploreBtn">Explore</button>
+
+  <div id="adventureResult" style="margin-top:1em; display:none;">
+    <h3>Adventure Book</h3>
+    <p id="bookTitle"></p>
+    <p id="bookRarity"></p>
+    <button id="resolveBtn" style="display:none;">Resolve Adventure</button>
+  </div>
+
+  <div id="rewardResult" style="margin-top:1em; display:none;">
+    <h3>Reward</h3>
+    <p id="rewardText"></p>
+  </div>
+</section>
+<hr/>
+
+
+  <h2 id="hoardHeading">Hoard</h2>
+
+  <div id="hoard">Loading hoard...</div>
+
+<h3>⚔️ PvP Battle Arena</h3>
+
+<label for="opponentSelect">Choose an opponent:</label>
+<select id="opponentSelect">
+  <option disabled selected>Loading opponents...</option>
+</select>
+
+<br><br>
+<button id="pvpBtn">Challenge Another Dragon</button>
+
+<div id="pvpResult" style="margin-top: 10px; font-weight: bold;"></div>
+
+  <!-- App Logic -->
+  <script src="main.js"></script>
+  <hr>
+
+
 </body>
 </html>
