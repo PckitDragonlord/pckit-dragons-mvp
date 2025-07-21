@@ -571,7 +571,6 @@ document.getElementById("signOutBtn").addEventListener("click", () => {
 
 // Initial load
 loadZones();
-loadDragons(); 
 displayHoard();
 loadOpponentOptions();
 
