@@ -185,21 +185,27 @@ async function displayHoard(dragonId = null) {
   try {
     const playerRef = db.collection("dragons").doc(dragonId);
     const doc = await playerRef.get();
-    if (doc.exists) {
-      const data = doc.data();
-      const hoard = data.hoard;
+   if (doc.exists) {
+  const data = doc.data();
+  const hoard = data.hoard;
 
-      if (hoard && typeof hoard === "object") {
-        for (const [treasureId, count] of Object.entries(hoard)) {
-          const treasureDoc = await db.collection("treasures").doc(treasureId).get();
-          const treasureData = treasureDoc.data();
-          const displayName = treasureData?.name || treasureId;
+  if (hoard && typeof hoard === "object") {
+    for (const [treasureId, count] of Object.entries(hoard)) {
+      const treasureDoc = await db.collection("treasures").doc(treasureId).get();
+      const treasureData = treasureDoc.data();
+      const displayName = treasureData?.name || treasureId;
 
-          const div = document.createElement("div");
-          div.textContent = count > 1 ? `${displayName} (x${count})` : displayName;
-          hoardContainer.appendChild(div);
-        }
-      }
+      const div = document.createElement("div");
+      div.textContent = count > 1 ? `${displayName} (x${count})` : displayName;
+      hoardContainer.appendChild(div);
+    }
+  }
+
+  // ✅ Add this right below the for-loop
+  const score = calculateHoardScore(data);
+  document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
+}
+
     } else {
       console.log("No such dragon document!");
     }
@@ -600,5 +606,3 @@ function calculateHoardScore(dragonData) {
   return score;
 }
 
-const score = calculateHoardScore(dragonData);
-document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
