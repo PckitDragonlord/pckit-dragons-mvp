@@ -67,7 +67,7 @@ auth.onAuthStateChanged(async (user) => {
     }
 
     // Set selected dragon and show hoard
-    await displayHoard();
+    await displayHoard(dragonDoc.id);
 
   } else {
     console.log("Signed out");
