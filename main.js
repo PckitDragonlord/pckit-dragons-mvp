@@ -202,17 +202,17 @@ async function displayHoard(dragonId = null) {
   }
 
   // ✅ Add this right below the for-loop
-  const score = calculateHoardScore(data);
-  document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
+const score = calculateHoardScore(data);
+document.getElementById("hoardScore").textContent = `Hoard Score: ${score}`;
+
+// Remove the extra closing brace here
+} else {
+  console.log("No such dragon document!");
+}
+} catch (error) {
+  console.error("Error fetching hoard:", error);
 }
 
-    } else {
-      console.log("No such dragon document!");
-    }
-  } catch (error) {
-    console.error("Error fetching hoard:", error);
-  }
-}
 
 
 
