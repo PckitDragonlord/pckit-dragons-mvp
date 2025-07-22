@@ -239,7 +239,6 @@ async function displayHoard(dragonId = null) {
   console.warn("Hoard container not found in DOM");
   return;
 }
-hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
 
   // Prefer passed-in dragonId; fall back to global getter if null
   if (!dragonId) {
@@ -252,6 +251,7 @@ hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
   }
 
   try {
+    hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
     const playerRef = db.collection("dragons").doc(dragonId);
     const doc = await playerRef.get();
     if (doc.exists) {
