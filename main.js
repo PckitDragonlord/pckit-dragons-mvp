@@ -328,49 +328,6 @@ hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
   let currentSelectedBook = null;
 
   // 1. Populate Zones dropdown from Firestore
-  async function loadZones() {
-  const zoneSelect = document.getElementById("zoneSelect");
-  const previouslySelected = zoneSelect?.value;
-
-  const snapshot = await db.collection("zones").get();
-    zoneSelect.innerHTML = "";
-    snapshot.forEach(doc => {
-    const option = document.createElement("option");
-    option.value = doc.id;
-    option.textContent = doc.data().name;
-    zoneSelect.appendChild(option);
-    });
-
-     // Try to restore previous selection if it still exists
-  if ([...zoneSelect.options].some(opt => opt.value === previouslySelected)) {
-    zoneSelect.value = previouslySelected;
-  }
-
-  async function loadOpponentOptions() {
-    const opponentSelect = document.getElementById("opponentSelect");
-    opponentSelect.innerHTML = "";
-
-    const snap = await db.collection("dragons").get();
-    const currentId = getSelectedDragonId();
-
-    snap.forEach(doc => {
-      if (doc.id !== currentId) {
-        const option = document.createElement("option");
-        option.value = doc.id;
-        option.textContent = doc.data().name || doc.id;
-        opponentSelect.appendChild(option);
-      }
-    });
-
-    if (opponentSelect.options.length === 0) {
-      const option = document.createElement("option");
-      option.disabled = true;
-      option.textContent = "No opponents available.";
-      opponentSelect.appendChild(option);
-    }
-  }
-
-
   // 2. When Explore clicked: pick random Adventure Book for that zone
   exploreBtn.addEventListener("click", async () => {
     rewardResultDiv.style.display = "none";
