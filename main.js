@@ -115,6 +115,8 @@ async function loadZones() {
     const previousValue = select.value; // 👈 remember user's selection
 
     const zonesSnapshot = await db.collection("zones").get();
+    console.log("Loading zones… (this may reset selection)");
+
     select.innerHTML = "";
 
     zonesSnapshot.forEach(doc => {
@@ -230,12 +232,14 @@ async function getHoardScore(dragonId) {
 }
 
 
-// Display hoard
-// Display hoard with treasure names
 // Display hoard with treasure names
 async function displayHoard(dragonId = null) {
   const hoardContainer = document.getElementById("hoard");
-  hoardContainer.innerHTML = "";
+  if (!hoardContainer) {
+  console.warn("Hoard container not found in DOM");
+  return;
+}
+hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
 
   // Prefer passed-in dragonId; fall back to global getter if null
   if (!dragonId) {
@@ -325,14 +329,16 @@ async function displayHoard(dragonId = null) {
 
   // 1. Populate Zones dropdown from Firestore
   async function loadZones() {
-    const snap = await db.collection("zones").get();
+  const zoneSelect = document.getElementById("zoneSelect");
+  const previouslySelected = zoneSelect?.value;
+
+  const snapshot = await db.collection("zones").get();
     zoneSelect.innerHTML = "";
-    snap.forEach(doc => {
-      const z = doc.data();
-      const opt = document.createElement("option");
-      opt.value = doc.id;
-      opt.textContent = z.name;
-      zoneSelect.appendChild(opt);
+    snapshot.forEach(doc => {
+    const option = document.createElement("option");
+    option.value = doc.id;
+    option.textContent = doc.data().name;
+    zoneSelect.appendChild(option);
     });
   }
 
