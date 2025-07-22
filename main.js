@@ -203,7 +203,8 @@ async function displayHoard() {
   hoardContainer.innerHTML = "";
 
   const dragonId = getSelectedDragonId();
-
+  console.log("Displaying hoard for dragonId:", dragonId);
+ 
   if (!dragonId) {
     console.warn("No dragon selected. Skipping displayHoard.");
     return;
