@@ -340,6 +340,10 @@ hoardContainer.innerHTML = ""; // Clear existing items before adding new ones
     option.textContent = doc.data().name;
     zoneSelect.appendChild(option);
     });
+
+     // Try to restore previous selection if it still exists
+  if ([...zoneSelect.options].some(opt => opt.value === previouslySelected)) {
+    zoneSelect.value = previouslySelected;
   }
 
   async function loadOpponentOptions() {
