@@ -196,8 +196,6 @@ async function getHoardScore(dragonId) {
 }
 
 
-// Display hoard
-// Display hoard with treasure names
 // Display hoard with treasure names
 async function displayHoard() {
   const hoardContainer = document.getElementById("hoard");
@@ -469,9 +467,19 @@ if (combatRoll >= targetScore) {
   const pickedTreasureId = treasures[Math.floor(Math.random() * treasures.length)];
 
   // Update hoard
-  const currentCount = hoard[pickedTreasureId] || 0;
-  hoard[pickedTreasureId] = currentCount + 1;
+  // Debug-enhanced hoard update block
+console.log("Updating hoard for treasure ID:", pickedTreasureId);
+console.log("Current hoard before update:", hoard);
+
+const currentCount = hoard[pickedTreasureId] || 0;
+hoard[pickedTreasureId] = currentCount + 1;
+
+try {
   await dragonRef.update({ hoard });
+  console.log("Hoard updated successfully:", hoard);
+} catch (error) {
+  console.error("Error updating hoard in Firestore:", error);
+}
 
   const treasureDoc = await db.collection("treasures").doc(pickedTreasureId).get();
   const treasureData = treasureDoc.data();
