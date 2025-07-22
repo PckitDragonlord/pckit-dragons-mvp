@@ -188,20 +188,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
 
 // Auth State Change
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    signInBtn.style.display = "none";
-    signOutBtn.style.display = "inline";
-    userNameSpan.textContent = `Logged in as ${user.displayName}`;
-    console.log("Signed in as", user.displayName);
-    // You can also trigger other logic here (e.g., loadPlayerData(user.uid))
-  } else {
-    signInBtn.style.display = "inline";
-    signOutBtn.style.display = "none";
-    userNameSpan.textContent = "";
-    console.log("Signed out");
-  }
-});
 
 
 // === Shared Hoard Score Function ===
@@ -233,12 +219,6 @@ async function getHoardScore(dragonId) {
 
 
 // Display hoard with treasure names
-async function displayHoard(dragonId = null) {
-  const hoardContainer = document.getElementById("hoard");
-  if (!hoardContainer) {
-  console.warn("Hoard container not found in DOM");
-  return;
-}
 
   // Prefer passed-in dragonId; fall back to global getter if null
   if (!dragonId) {
