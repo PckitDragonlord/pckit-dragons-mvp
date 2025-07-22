@@ -196,9 +196,10 @@ async function getHoardScore(dragonId) {
 }
 
 
-// Display hoard with treasure names
+// Display hoard with treasure names and calculate score
 async function displayHoard() {
   const hoardContainer = document.getElementById("hoard");
+  const hoardScoreDisplay = document.getElementById("hoardScore"); // NEW
   hoardContainer.innerHTML = "";
 
   const dragonId = getSelectedDragonId();
@@ -225,6 +226,10 @@ async function displayHoard() {
           div.textContent = count > 1 ? `${displayName} (x${count})` : displayName;
           hoardContainer.appendChild(div);
         }
+
+        // ✅ Calculate and show score
+        const score = await calculateHoardScore(hoard, db);
+        hoardScoreDisplay.textContent = `Score: ${score}`;
       }
     } else {
       console.log("No such dragon document!");
@@ -233,6 +238,7 @@ async function displayHoard() {
     console.error("Error fetching hoard:", error);
   }
 }
+
 
 
 
@@ -486,7 +492,8 @@ try {
   const displayName = treasureData?.name || pickedTreasureId;
 
   rewardTextEl.textContent = `${flavor} You earned: ${displayName}!`;
-  displayHoard();
+  await displayHoard();
+
 } else {
   rewardTextEl.textContent = `${flavor} No treasure this time.`;
   }
