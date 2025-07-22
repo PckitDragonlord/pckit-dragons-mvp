@@ -111,10 +111,11 @@ async function loadTreasureCache() {
 
 async function loadZones() {
   try {
-    const zonesSnapshot = await db.collection("zones").get();
     const select = document.getElementById("zoneSelect");
+    const previousValue = select.value; // 👈 remember user's selection
 
-    select.innerHTML = ""; // Clear existing options
+    const zonesSnapshot = await db.collection("zones").get();
+    select.innerHTML = "";
 
     zonesSnapshot.forEach(doc => {
       const option = document.createElement("option");
@@ -122,17 +123,25 @@ async function loadZones() {
       option.textContent = doc.data().name || doc.id;
       select.appendChild(option);
     });
+
+    // 👇 try to restore their selection
+    if (previousValue) {
+      select.value = previousValue;
+    }
   } catch (error) {
     console.error("Error loading zones:", error);
   }
 }
 
 
+
 async function initializeApp() {
   await loadTreasureCache();
+  await loadZones();              // 👈 Add this line
   await displayHoard();
   loadOpponentOptions();
 }
+
 
 initializeApp();
 
