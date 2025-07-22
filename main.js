@@ -1,5 +1,8 @@
 let selectedDragonId = null;
 
+let treasureCache = {};
+
+
 function setSelectedDragonId(id) {
   selectedDragonId = id;
 }
@@ -80,6 +83,23 @@ auth.onAuthStateChanged(async (user) => {
     hoardContainer.innerHTML = "<em>Please sign in to view your hoard.</em>";
   }
 });
+
+async function loadTreasureCache() {
+  const treasureSnap = await db.collection("treasures").get();
+  treasureSnap.forEach(doc => {
+    treasureCache[doc.id] = doc.data();
+  });
+}
+
+async function initializeApp() {
+  await loadTreasureCache();
+  loadZones();
+  await displayHoard();
+  loadOpponentOptions();
+}
+
+initializeApp();
+
 
 
 // ✅ 3. Auth State Listener (AFTER sign-in/sign-out defined)
@@ -578,11 +598,6 @@ async function displayHoard(dragonId = null) {
   });
 
 
-
-  // Initial load
-  loadZones();
-  displayHoard();
-  loadOpponentOptions();
 
   function calculateHoardScore(dragonData) {
     const hoard = dragonData.hoard || {};
