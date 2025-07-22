@@ -93,7 +93,6 @@ async function loadTreasureCache() {
 
 async function initializeApp() {
   await loadTreasureCache();
-  loadZones();
   await displayHoard();
   loadOpponentOptions();
 }
