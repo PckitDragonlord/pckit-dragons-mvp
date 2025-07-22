@@ -29,6 +29,24 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
+async function loadOpponentOptions() {
+  const opponentSelect = document.getElementById("opponentSelect");
+  opponentSelect.innerHTML = ""; // Clear old options
+
+  try {
+    const snapshot = await db.collection("dragons").get();
+    snapshot.forEach(doc => {
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = doc.data().name || doc.id; // fallback to doc.id if no name
+      opponentSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Failed to load opponent options:", error);
+  }
+}
+
+
 // 2. Sign-In and Sign-Out Button Handlers
 const signInBtn = document.getElementById("signInBtn");
 const signOutBtn = document.getElementById("signOutBtn");
