@@ -109,6 +109,25 @@ async function loadTreasureCache() {
   });
 }
 
+async function loadZones() {
+  try {
+    const zonesSnapshot = await db.collection("zones").get();
+    const select = document.getElementById("zoneSelect");
+
+    select.innerHTML = ""; // Clear existing options
+
+    zonesSnapshot.forEach(doc => {
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = doc.data().name || doc.id;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading zones:", error);
+  }
+}
+
+
 async function initializeApp() {
   await loadTreasureCache();
   await displayHoard();
