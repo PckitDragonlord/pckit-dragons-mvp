@@ -72,60 +72,63 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-import { auth, db } from './firebase.js';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 let currentPlayerId = null;
 let currentDragonId = null;
 
 auth.onAuthStateChanged(async (user) => {
   if (user) {
-    document.getElementById('signOut').style.display = 'block';
-    document.getElementById('signOut').onclick = () => auth.signOut();
-    document.body.insertAdjacentHTML('afterbegin', `<p>Signed in as: ${user.displayName}</p>`);
-
+    userInfo.textContent = `Signed in as: ${user.displayName}`;
+    signInBtn.style.display = "none";
+    signOutBtn.style.display = "inline-block";
     currentPlayerId = user.uid;
-    const playerRef = doc(db, 'players', currentPlayerId);
-    const playerSnap = await getDoc(playerRef);
 
-    if (!playerSnap.exists()) {
-      await setDoc(playerRef, { name: user.displayName });
+    const playerRef = db.collection("players").doc(currentPlayerId);
+    const docSnapshot = await playerRef.get();
+
+    if (!docSnapshot.exists) {
+      await playerRef.set({
+        name: user.displayName
+      });
     }
 
-    const playerData = (await getDoc(playerRef)).data();
+    const playerData = (await playerRef.get()).data();
     currentDragonId = playerData.dragonId;
 
     if (!currentDragonId) {
-      document.getElementById('dragonSelection').style.display = 'block';
+      document.getElementById("dragonSelection").style.display = "block";
     } else {
-      console.log(`Player already has dragon: ${currentDragonId}`);
+      console.log("Player already has dragon:", currentDragonId);
     }
+
+    loadZones(); // keep this here
+  } else {
+    userInfo.textContent = "Not signed in";
+    signInBtn.style.display = "inline-block";
+    signOutBtn.style.display = "none";
   }
 });
 
-document.getElementById('confirmDragon').addEventListener('click', async () => {
-  const selectedDragon = document.getElementById('dragonDropdown').value;
+// Confirm dragon selection
+document.getElementById("confirmDragon").addEventListener("click", async () => {
+  const selectedDragon = document.getElementById("dragonDropdown").value;
 
   if (!selectedDragon) {
-    alert('Please select a dragon.');
+    alert("Please select a dragon.");
     return;
   }
 
-  const playerRef = doc(db, 'players', currentPlayerId);
-  await updateDoc(playerRef, {
+  const playerRef = db.collection("players").doc(currentPlayerId);
+  await playerRef.update({
     dragonId: selectedDragon
   });
 
   alert(`Dragon ${selectedDragon} selected!`);
-  document.getElementById('dragonSelection').style.display = 'none';
+  document.getElementById("dragonSelection").style.display = "none";
   currentDragonId = selectedDragon;
 });
-
 
 exploreBtn.addEventListener("click", () => {
   const selectedZoneId = zoneSelect.value;
