@@ -1,24 +1,26 @@
-// main.js – Clean rebuild of core game loop
+// main.js – Core game loop with Firebase 8.10.1 compatibility
 
-import { db } from "./firebase.js";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  getFirestore,
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// Firebase initialization (v8 style)
+var firebaseConfig = {
+  apiKey: "AIzaSyBmthZz_uTdO1y-dAey42v9gznMqLCDQ_A",
+  authDomain: "pckit-dragons-dev.firebaseapp.com",
+  projectId: "pckit-dragons-dev",
+  storageBucket: "pckit-dragons-dev.appspot.com",
+  messagingSenderId: "413167849496",
+  appId: "1:413167849496:web:4feb00d1bf28916ac7b36d",
+  measurementId: "G-YQ9C6ZB2ZP"
+};
 
-// Utility: Get the currently selected dragon ID
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+
+// Get the currently selected dragon ID
 function getSelectedDragonId() {
   const id = localStorage.getItem("selectedDragonId");
-  if (!id || id === "null") {
-    console.warn("No dragon selected in localStorage.");
-    return null;
-  }
-  return id;
+  return id && id !== "null" ? id : null;
 }
 
-// Function: Display the hoard
+// Display the hoard and score for the selected dragon
 async function displayHoard() {
   const hoardContainer = document.getElementById("hoard");
   const hoardScoreDisplay = document.getElementById("hoardScore");
@@ -27,58 +29,40 @@ async function displayHoard() {
   const dragonId = getSelectedDragonId();
   if (!dragonId) return;
 
-  const dragonRef = doc(db, "dragons", dragonId);
-  const dragonSnap = await getDoc(dragonRef);
-  if (!dragonSnap.exists()) return;
+  const dragonRef = db.collection("dragons").doc(dragonId);
+  const dragonSnap = await dragonRef.get();
+  if (!dragonSnap.exists) return;
 
   const hoard = dragonSnap.data().hoard || {};
   let hoardScore = 0;
 
   for (const [treasureId, count] of Object.entries(hoard)) {
-    const treasureDoc = await getDoc(doc(db, "treasures", treasureId));
-    const treasureData = treasureDoc.exists() ? treasureDoc.data() : {};
+    const treasureSnap = await db.collection("treasures").doc(treasureId).get();
+    const treasureData = treasureSnap.exists ? treasureSnap.data() : {};
     const displayName = treasureData.name || treasureId;
+
     const listItem = document.createElement("li");
     listItem.textContent = `${displayName} x${count}`;
     hoardContainer.appendChild(listItem);
+
     hoardScore += count;
   }
 
   hoardScoreDisplay.textContent = `Hoard Score: ${hoardScore}`;
 }
 
-// Function: Update hoard with a treasure drop
-async function updateHoard(treasureId, flavor) {
+// Update the hoard with a new treasure
+async function updateHoard(treasureId) {
   const dragonId = getSelectedDragonId();
   if (!dragonId) return;
 
-  const dragonRef = doc(db, "dragons", dragonId);
-  const dragonSnap = await getDoc(dragonRef);
-  const hoard = (dragonSnap.exists() ? dragonSnap.data().hoard : {}) || {};
+  const dragonRef = db.collection("dragons").doc(dragonId);
+  const dragonSnap = await dragonRef.get();
+  const hoard = dragonSnap.exists ? dragonSnap.data().hoard || {} : {};
 
   hoard[treasureId] = (hoard[treasureId] || 0) + 1;
-  await updateDoc(dragonRef, { hoard });
-
-  const treasureDoc = await getDoc(doc(db, "treasures", treasureId));
-  const treasureData = treasureDoc.exists() ? treasureDoc.data() : {};
-  const displayName = treasureData.name || treasureId;
-  document.getElementById("rewardText").textContent = `${flavor} You earned: ${displayName}!`;
-
+  await dragonRef.update({ hoard });
   await displayHoard();
-}
-
-// Hook: Called by PvE or PvP outcomes
-function onAdventureResult(treasureId, flavor) {
-  if (treasureId) {
-    updateHoard(treasureId, flavor);
-  } else {
-    document.getElementById("rewardText").textContent = `${flavor} No treasure this time.`;
-  }
-
-  document.getElementById("rewardResult").style.display = "block";
-  const resolveBtn = document.getElementById("resolveBtn");
-  resolveBtn.textContent = "Resolve Adventure";
-  resolveBtn.disabled = false;
 }
 
 // Initial load
