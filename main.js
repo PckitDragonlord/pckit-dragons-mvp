@@ -1,6 +1,3 @@
-// --- Firebase v8 Firestore Setup ---
-const db = firebase.firestore();
-
 // --- Auth Elements ---
 const signInBtn = document.getElementById('signInBtn');
 const signOutBtn = document.getElementById('signOutBtn');
@@ -44,7 +41,7 @@ async function loadZones() {
   const zoneSelect = document.getElementById('zoneSelect');
   zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
 
-  const snapshot = await db.collection('zones').get();
+  const snapshot = await firebase.firestore().collection('zones').get();
   snapshot.forEach(doc => {
     const zone = doc.data();
     const option = document.createElement('option');
@@ -57,7 +54,7 @@ async function loadZones() {
 // --- Load Player Dragon ---
 async function loadPlayerDragon() {
   const dropdown = document.getElementById('dragonDropdown');
-  const docSnap = await db.collection("players").doc(currentUser.uid).get();
+  const docSnap = await firebase.firestore().collection("players").doc(currentUser.uid).get();
 
   if (docSnap.exists()) {
     const data = docSnap.data();
@@ -71,7 +68,7 @@ async function loadPlayerDragon() {
       return;
     }
 
-    await db.collection("players").doc(currentUser.uid).update({
+    await firebase.firestore().collection("players").doc(currentUser.uid).update({
       dragonID: selectedDragon
     });
 
@@ -88,7 +85,7 @@ document.getElementById('exploreBtn').onclick = async () => {
     return;
   }
 
-  const snapshot = await db.collection('adventureBooks').where('zoneId', '==', zoneId).get();
+  const snapshot = await firebase.firestore().collection('adventureBooks').where('zoneId', '==', zoneId).get();
   const books = [];
   snapshot.forEach(doc => {
     books.push({ id: doc.id, ...doc.data() });
@@ -115,7 +112,7 @@ document.getElementById('exploreBtn').onclick = async () => {
   `;
 
   document.getElementById('resolveBtn').onclick = async () => {
-    const treasureSnapshot = await db.collection("treasures").get();
+    const treasureSnapshot = await firebase.firestore().collection("treasures").get();
     const allTreasures = [];
     treasureSnapshot.forEach(doc => {
       allTreasures.push({ id: doc.id, ...doc.data() });
@@ -138,7 +135,7 @@ document.getElementById('exploreBtn').onclick = async () => {
 
 // --- Add Treasure to Hoard (Stackable Map) ---
 async function addTreasureToHoard(userId, treasure) {
-  const playerRef = db.collection("players").doc(userId);
+  const playerRef = firebase.firestore().collection("players").doc(userId);
   const playerSnap = await playerRef.get();
 
   if (!playerSnap.exists()) return;
@@ -160,7 +157,7 @@ async function addTreasureToHoard(userId, treasure) {
 
 // --- Update Hoard Display ---
 async function updateHoardDisplay(userId) {
-  const playerRef = db.collection("players").doc(userId);
+  const playerRef = firebase.firestore().collection("players").doc(userId);
   const playerSnap = await playerRef.get();
   const hoardList = document.getElementById('hoardList');
   const hoardScoreSpan = document.getElementById('hoardScore');
