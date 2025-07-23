@@ -51,6 +51,6 @@ async function loadZones() {
     option.value = doc.id;
     option.textContent = zone.name;
     zoneSelect.append
-
+  }
 
 
