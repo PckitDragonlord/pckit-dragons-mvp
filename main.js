@@ -74,6 +74,8 @@ auth.onAuthStateChanged((user) => {
 
 exploreBtn.addEventListener("click", () => {
   const selectedZoneId = zoneSelect.value;
+  const bookListDiv = document.getElementById("bookList");
+  bookListDiv.innerHTML = "";
 
   if (!selectedZoneId) {
     alert("Please choose a zone first.");
@@ -85,21 +87,27 @@ exploreBtn.addEventListener("click", () => {
     .get()
     .then(snapshot => {
       if (snapshot.empty) {
-        alert("No adventure books available in this zone.");
+        bookListDiv.innerHTML = "<p>No adventure books found in this zone.</p>";
         return;
       }
 
-      let bookList = "Available Adventures:\n\n";
+      const books = [];
       snapshot.forEach(doc => {
-        const book = doc.data();
-        bookList += `📘 ${book.title} [${book.difficulty}, ${book.rarity}]\n`;
+        books.push(doc.data());
       });
 
-      alert(bookList);
+      const randomBook = books[Math.floor(Math.random() * books.length)];
+
+      bookListDiv.innerHTML = `
+        <h3>📖 You discovered:</h3>
+        <p><strong>${randomBook.title}</strong></p>
+        <p>Difficulty: ${randomBook.difficulty}</p>
+        <p>Rarity: ${randomBook.rarity}</p>
+      `;
     })
     .catch(error => {
-      console.error("Error fetching adventure books:", error);
-      alert("Failed to fetch books. Check the console for details.");
+      console.error("Error exploring zone:", error);
+      bookListDiv.innerHTML = "<p>Error exploring zone. Check console.</p>";
     });
 });
 
