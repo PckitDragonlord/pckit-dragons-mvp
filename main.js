@@ -15,6 +15,21 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+document.getElementById("signInBtn").addEventListener("click", () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(result => {
+      const user = result.user;
+      console.log("Signed in as:", user.displayName);
+      localStorage.setItem("userName", user.displayName);
+      document.getElementById("signInBtn").style.display = "none";
+    })
+    .catch(error => {
+      console.error("Sign-in error:", error);
+    });
+});
+
+
 // Get the currently selected dragon ID
 function getSelectedDragonId() {
   const id = localStorage.getItem("selectedDragonId");
