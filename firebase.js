@@ -1,6 +1,6 @@
-// firebase.js — Firebase v8.10.1 configuration and initialization
+// === firebase.js ===
 
-// Your web app's Firebase configuration
+// Your Firebase config object (same as before)
 var firebaseConfig = {
   apiKey: "AIzaSyBmthZz_uTdO1y-dAey42v9gznMqLCDQ_A",
   authDomain: "pckit-dragons-dev.firebaseapp.com",
@@ -13,3 +13,5 @@ var firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
