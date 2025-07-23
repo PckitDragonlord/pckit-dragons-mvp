@@ -4,6 +4,24 @@
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+function loadZones() {
+  const zoneSelect = document.getElementById("zoneSelect");
+
+  db.collection("zones").get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const zone = doc.data();
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = zone.name;
+      zoneSelect.appendChild(option);
+    });
+    console.log("Zones loaded successfully.");
+  }).catch(error => {
+    console.error("Error loading zones:", error);
+  });
+}
+
+
 // DOM elements
 const signInBtn = document.getElementById("signInBtn");
 const signOutBtn = document.getElementById("signOutBtn");
@@ -37,3 +55,4 @@ auth.onAuthStateChanged((user) => {
     signOutBtn.style.display = "none";
   }
 });
+
