@@ -1,8 +1,14 @@
-// Auth
+// --- Firebase Firestore Imports ---
+import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
+
+// --- Auth Elements ---
 const signInBtn = document.getElementById('signInBtn');
 const signOutBtn = document.getElementById('signOutBtn');
 const userInfo = document.getElementById('userInfo');
 
+let currentUser = null;
+
+// --- Auth Functions ---
 signInBtn.onclick = () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider);
@@ -12,7 +18,7 @@ signOutBtn.onclick = () => {
   firebase.auth().signOut();
 };
 
-// Auth State Listener
+// --- Auth State Listener ---
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
@@ -22,7 +28,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     document.getElementById('dragonSelection').style.display = 'block';
     loadPlayerDragon();
     loadZones();
-
+    updateHoardDisplay(user.uid);
   } else {
     currentUser = null;
     userInfo.textContent = 'Not signed in';
@@ -30,11 +36,10 @@ firebase.auth().onAuthStateChanged(async (user) => {
     signOutBtn.style.display = 'none';
     document.getElementById('explorationSection').style.display = 'none';
     document.getElementById('dragonSelection').style.display = 'none';
-
   }
 });
 
-// Load Zones
+// --- Load Zones ---
 async function loadZones() {
   const zoneSelect = document.getElementById('zoneSelect');
   zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
@@ -49,12 +54,13 @@ async function loadZones() {
   });
 }
 
+// --- Load Player Dragon ---
 async function loadPlayerDragon() {
   const dropdown = document.getElementById('dragonDropdown');
-  const doc = await db.collection('players').doc(currentUser.uid).get();
+  const docSnap = await db.collection('players').doc(currentUser.uid).get();
 
-  if (doc.exists) {
-    const data = doc.data();
+  if (docSnap.exists) {
+    const data = docSnap.data();
     dropdown.value = data.dragonID || "";
   }
 
@@ -70,11 +76,11 @@ async function loadPlayerDragon() {
     }, { merge: true });
 
     alert("Dragon selected: " + selectedDragon);
+    document.getElementById('explorationSection').style.display = 'block';
   };
 }
 
-
-// Explore Button
+// --- Explore Button Handler ---
 document.getElementById('exploreBtn').onclick = async () => {
   const zoneId = document.getElementById('zoneSelect').value;
   if (!zoneId) {
@@ -109,5 +115,89 @@ document.getElementById('exploreBtn').onclick = async () => {
       </div>
     </div>
   `;
+
+  // 💎 Drop a treasure after book encounter
+  await dropRandomTreasureAndAddToHoard(currentUser.uid);
 };
+
+// --- Drop Random Treasure ---
+async function dropRandomTreasureAndAddToHoard(userId) {
+  const treasureSnapshot = await getDocs(collection(db, "treasures"));
+  const allTreasures = [];
+  treasureSnapshot.forEach(doc => {
+    allTreasures.push({ id: doc.id, ...doc.data() });
+  });
+
+  if (allTreasures.length === 0) {
+    console.error("No treasures found in Firestore.");
+    return;
+  }
+
+  const randomIndex = Math.floor(Math.random() * allTreasures.length);
+  const selectedTreasure = allTreasures[randomIndex];
+
+  console.log("🎁 Dropped Treasure:", selectedTreasure.name || selectedTreasure.id);
+
+  await addTreasureToHoard(userId, selectedTreasure);
+  await updateHoardDisplay(userId);
+}
+
+// --- Add Treasure to Hoard (Stackable Map) ---
+async function addTreasureToHoard(userId, treasure) {
+  const playerRef = doc(db, "players", userId);
+  const playerSnap = await getDoc(playerRef);
+
+  if (!playerSnap.exists()) return;
+
+  const hoard = playerSnap.data().hoard || {};
+  const existing = hoard[treasure.id];
+
+  const updatedTreasure = {
+    ...treasure,
+    count: existing ? existing.count + 1 : 1
+  };
+
+  const hoardField = `hoard.${treasure.id}`;
+  await updateDoc(playerRef, {
+    [hoardField]: updatedTreasure
+  });
+
+  console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
+}
+
+// --- Update Hoard Display ---
+async function updateHoardDisplay(userId) {
+  const playerRef = doc(db, "players", userId);
+  const playerSnap = await getDoc(playerRef);
+  const hoardList = document.getElementById('hoardList');
+  const hoardScoreSpan = document.getElementById('hoardScore');
+
+  hoardList.innerHTML = '';
+  let score = 0;
+
+  if (playerSnap.exists()) {
+    const hoardMap = playerSnap.data().hoard || {};
+
+    Object.values(hoardMap).forEach(treasure => {
+      const count = treasure.count || 1;
+      const li = document.createElement('li');
+      li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
+      hoardList.appendChild(li);
+
+      let rarityScore = 0;
+      switch ((treasure.rarity || '').toLowerCase()) {
+        case 'common': rarityScore = 1; break;
+        case 'uncommon': rarityScore = 3; break;
+        case 'heroic': rarityScore = 6; break;
+        case 'epic': rarityScore = 10; break;
+        case 'legendary': rarityScore = 20; break;
+        case 'mythic': rarityScore = 30; break;
+      }
+      score += rarityScore * count;
+    });
+  }
+
+  hoardScoreSpan.textContent = score;
+}
+
 
