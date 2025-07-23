@@ -49,10 +49,18 @@ auth.onAuthStateChanged((user) => {
     signInBtn.style.display = "none";
     signOutBtn.style.display = "inline-block";
     console.log("User UID:", user.uid);
+    
+    loadZones(); // 🔥 Add this here
+
   } else {
     userInfo.textContent = "Not signed in";
     signInBtn.style.display = "inline-block";
     signOutBtn.style.display = "none";
   }
+});
+
+// Load zones when the page finishes loading
+window.addEventListener("DOMContentLoaded", () => {
+  loadZones();
 });
 
