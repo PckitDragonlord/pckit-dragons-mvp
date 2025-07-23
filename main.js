@@ -49,6 +49,31 @@ async function loadZones() {
   });
 }
 
+async function loadPlayerDragon() {
+  const dropdown = document.getElementById('dragonDropdown');
+  const doc = await db.collection('players').doc(currentUser.uid).get();
+
+  if (doc.exists) {
+    const data = doc.data();
+    dropdown.value = data.dragonID || "";
+  }
+
+  document.getElementById('confirmDragon').onclick = async () => {
+    const selectedDragon = dropdown.value;
+    if (!selectedDragon) {
+      alert("Please choose a dragon!");
+      return;
+    }
+
+    await db.collection('players').doc(currentUser.uid).set({
+      dragonID: selectedDragon
+    }, { merge: true });
+
+    alert("Dragon selected: " + selectedDragon);
+  };
+}
+
+
 // Explore Button
 document.getElementById('exploreBtn').onclick = async () => {
   const zoneId = document.getElementById('zoneSelect').value;
