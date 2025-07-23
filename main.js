@@ -104,23 +104,41 @@ document.getElementById('exploreBtn').onclick = async () => {
   const randomIndex = Math.floor(Math.random() * books.length);
   const selectedBook = books[randomIndex];
 
+  // Show book and Resolve button
   document.getElementById('discoveryBox').innerHTML = `
     <div class="book-card">
       <h3>${selectedBook.title}</h3>
       <p><strong>Rarity:</strong> ${selectedBook.rarity}</p>
       <p><strong>Difficulty:</strong> ${selectedBook.difficulty}</p>
-      <!-- Placeholder for cover art -->
-      <div class="book-cover-placeholder">
-        <!-- later, insert: <img src="${selectedBook.coverUrl}" alt="Book Cover" /> -->
-      </div>
+      <div class="book-cover-placeholder"></div>
+      <button id="resolveBtn" style="margin-top:10px;">Resolve Adventure</button>
+      <p id="resolveResult" style="margin-top:10px; font-weight: bold;"></p>
     </div>
   `;
 
-  // 💎 Drop a treasure after book encounter
-  await dropRandomTreasureAndAddToHoard(currentUser.uid);
+  document.getElementById('resolveBtn').onclick = async () => {
+    const treasureSnapshot = await getDocs(collection(db, "treasures"));
+    const allTreasures = [];
+    treasureSnapshot.forEach(doc => {
+      allTreasures.push({ id: doc.id, ...doc.data() });
+    });
+
+    if (allTreasures.length === 0) {
+      document.getElementById('resolveResult').textContent = "Error: No treasures found.";
+      return;
+    }
+
+    const treasureIndex = Math.floor(Math.random() * allTreasures.length);
+    const selectedTreasure = allTreasures[treasureIndex];
+
+    await addTreasureToHoard(currentUser.uid, selectedTreasure);
+    await updateHoardDisplay(currentUser.uid);
+
+    document.getElementById('resolveResult').textContent = `Success! You found: ${selectedTreasure.name} (${selectedTreasure.rarity})`;
+  };
 };
 
-// --- Drop Random Treasure ---
+// --- Drop Random Treasure (still used by Resolve) ---
 async function dropRandomTreasureAndAddToHoard(userId) {
   const treasureSnapshot = await getDocs(collection(db, "treasures"));
   const allTreasures = [];
