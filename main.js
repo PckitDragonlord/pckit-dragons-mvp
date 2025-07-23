@@ -31,9 +31,9 @@ window.addEventListener('DOMContentLoaded', () => {
       signInBtn.style.display = 'none';
       signOutBtn.style.display = 'inline';
       document.getElementById('dragonSelection').style.display = 'block';
-      loadPlayerDragon();
-      loadZones();
-      updateHoardDisplay(user.uid);
+      await loadPlayerDragon();
+      await loadZones();
+      await updateHoardDisplay(user.uid);
     } else {
       currentUser = null;
       userInfo.textContent = 'Not signed in';
@@ -60,23 +60,27 @@ window.addEventListener('DOMContentLoaded', () => {
     const docSnap = await firebase.firestore().collection('players').doc(currentUser.uid).get();
     if (docSnap.exists) {
       const data = docSnap.data();
-      dragonDropdown.value = data.dragonID || "";
+      if (dragonDropdown) {
+        dragonDropdown.value = data.dragonID || "";
+      }
     }
 
-    confirmDragonBtn.onclick = async () => {
-      const selectedDragon = dragonDropdown.value;
-      if (!selectedDragon) {
-        alert("Please choose a dragon!");
-        return;
-      }
+    if (confirmDragonBtn) {
+      confirmDragonBtn.onclick = async () => {
+        const selectedDragon = dragonDropdown?.value;
+        if (!selectedDragon) {
+          alert("Please choose a dragon!");
+          return;
+        }
 
-      await firebase.firestore().collection('players').doc(currentUser.uid).set({
-        dragonID: selectedDragon
-      }, { merge: true });
+        await firebase.firestore().collection('players').doc(currentUser.uid).set({
+          dragonID: selectedDragon
+        }, { merge: true });
 
-      alert("Dragon selected: " + selectedDragon);
-      document.getElementById('explorationSection').style.display = 'block';
-    };
+        alert("Dragon selected: " + selectedDragon);
+        document.getElementById('explorationSection').style.display = 'block';
+      };
+    }
   }
 
   exploreBtn.onclick = async () => {
