@@ -19,14 +19,18 @@ firebase.auth().onAuthStateChanged(async (user) => {
     userInfo.textContent = `Signed in as: ${user.displayName}`;
     signInBtn.style.display = 'none';
     signOutBtn.style.display = 'inline';
-    document.getElementById('explorationSection').style.display = 'block';
+    document.getElementById('dragonSelection').style.display = 'block';
+    loadPlayerDragon();
     loadZones();
+
   } else {
     currentUser = null;
     userInfo.textContent = 'Not signed in';
     signInBtn.style.display = 'inline';
     signOutBtn.style.display = 'none';
     document.getElementById('explorationSection').style.display = 'none';
+    document.getElementById('dragonSelection').style.display = 'none';
+
   }
 });
 
