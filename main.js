@@ -82,7 +82,7 @@ document.getElementById('exploreBtn').onclick = async () => {
     return;
   }
 
-  const booksRef = db.collection('adventureBooks').where('zoneID', '==', zoneId);
+  const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
   const snapshot = await booksRef.get();
   const books = [];
 
