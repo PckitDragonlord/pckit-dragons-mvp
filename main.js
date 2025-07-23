@@ -38,6 +38,7 @@ function loadZones() {
 const signInBtn = document.getElementById("signInBtn");
 const signOutBtn = document.getElementById("signOutBtn");
 const userInfo = document.getElementById("userInfo");
+const bookDisplay = document.getElementById("bookDisplay");
 
 // Sign in with Google
 signInBtn.addEventListener("click", () => {
