@@ -14,6 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const hoardScoreSpan = document.getElementById('hoardScore');
 
   let currentUser = null;
+  let currentBook = null;
 
   signInBtn.onclick = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -31,9 +32,9 @@ window.addEventListener('DOMContentLoaded', () => {
       signInBtn.style.display = 'none';
       signOutBtn.style.display = 'inline';
       document.getElementById('dragonSelection').style.display = 'block';
-      await loadPlayerDragon();
-      await loadZones();
-      await updateHoardDisplay(user.uid);
+      loadPlayerDragon();
+      loadZones();
+      updateHoardDisplay(user.uid);
     } else {
       currentUser = null;
       userInfo.textContent = 'Not signed in';
@@ -60,27 +61,23 @@ window.addEventListener('DOMContentLoaded', () => {
     const docSnap = await firebase.firestore().collection('players').doc(currentUser.uid).get();
     if (docSnap.exists) {
       const data = docSnap.data();
-      if (dragonDropdown) {
-        dragonDropdown.value = data.dragonID || "";
+      dragonDropdown.value = data.dragonID || "";
+    }
+
+    confirmDragonBtn.onclick = async () => {
+      const selectedDragon = dragonDropdown.value;
+      if (!selectedDragon) {
+        alert("Please choose a dragon!");
+        return;
       }
-    }
 
-    if (confirmDragonBtn) {
-      confirmDragonBtn.onclick = async () => {
-        const selectedDragon = dragonDropdown?.value;
-        if (!selectedDragon) {
-          alert("Please choose a dragon!");
-          return;
-        }
+      await firebase.firestore().collection('players').doc(currentUser.uid).set({
+        dragonID: selectedDragon
+      }, { merge: true });
 
-        await firebase.firestore().collection('players').doc(currentUser.uid).set({
-          dragonID: selectedDragon
-        }, { merge: true });
-
-        alert("Dragon selected: " + selectedDragon);
-        document.getElementById('explorationSection').style.display = 'block';
-      };
-    }
+      alert("Dragon selected: " + selectedDragon);
+      document.getElementById('explorationSection').style.display = 'block';
+    };
   }
 
   exploreBtn.onclick = async () => {
@@ -104,19 +101,72 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     const randomIndex = Math.floor(Math.random() * books.length);
-    const selectedBook = books[randomIndex];
+    currentBook = books[randomIndex];
 
     discoveryBox.innerHTML = `
       <div class="book-card">
-        <h3>${selectedBook.title}</h3>
-        <p><strong>Rarity:</strong> ${selectedBook.rarity}</p>
-        <p><strong>Difficulty:</strong> ${selectedBook.difficulty}</p>
+        <h3>${currentBook.title}</h3>
+        <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
+        <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
         <div class="book-cover-placeholder"></div>
+        <button id="resolveBtn">Resolve Adventure</button>
+        <p id="combatResult"></p>
       </div>
     `;
 
-    await dropRandomTreasureAndAddToHoard(currentUser.uid);
+    document.getElementById('resolveBtn').onclick = () => {
+      resolveAdventureWithCombat(currentBook, currentUser.uid);
+    };
   };
+
+  function getDifficultyTarget(difficulty, hoardScore) {
+    switch ((difficulty || '').toLowerCase()) {
+      case 'easy': return hoardScore * 1.5;
+      case 'moderate': return hoardScore * 2.5;
+      case 'hard': return hoardScore * 3.5;
+      case 'extreme': return hoardScore * 5;
+      default: return hoardScore * 3;
+    }
+  }
+
+  async function resolveAdventureWithCombat(book, userId) {
+    const hoardScore = await getHoardScore(userId);
+    const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
+    const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
+    const resultBox = document.getElementById('combatResult');
+
+    if (playerRoll >= enemyRoll) {
+      resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
+      await dropRandomTreasureAndAddToHoard(userId);
+    } else {
+      resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
+    }
+  }
+
+  async function getHoardScore(userId) {
+    const playerRef = firebase.firestore().collection("players").doc(userId);
+    const playerSnap = await playerRef.get();
+    let score = 0;
+
+    if (playerSnap.exists) {
+      const hoardMap = playerSnap.data().hoard || {};
+      Object.values(hoardMap).forEach(treasure => {
+        const count = treasure.count || 1;
+        let rarityScore = 0;
+        switch ((treasure.rarity || '').toLowerCase()) {
+          case 'common': rarityScore = 1; break;
+          case 'uncommon': rarityScore = 3; break;
+          case 'heroic': rarityScore = 6; break;
+          case 'epic': rarityScore = 10; break;
+          case 'legendary': rarityScore = 20; break;
+          case 'mythic': rarityScore = 30; break;
+        }
+        score += rarityScore * count;
+      });
+    }
+
+    return score;
+  }
 
   async function dropRandomTreasureAndAddToHoard(userId) {
     const treasureSnapshot = await firebase.firestore().collection("treasures").get();
@@ -193,5 +243,6 @@ window.addEventListener('DOMContentLoaded', () => {
     hoardScoreSpan.textContent = score;
   }
 });
+
 
 
