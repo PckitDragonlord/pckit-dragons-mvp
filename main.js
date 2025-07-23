@@ -70,9 +70,3 @@ auth.onAuthStateChanged((user) => {
     signOutBtn.style.display = "none";
   }
 });
-
-// Load zones when the page finishes loading
-window.addEventListener("DOMContentLoaded", () => {
-  loadZones();
-});
-
