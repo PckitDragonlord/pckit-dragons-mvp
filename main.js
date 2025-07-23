@@ -6,6 +6,17 @@ const db = firebase.firestore();
 
 function loadZones() {
   const zoneSelect = document.getElementById("zoneSelect");
+  
+  // Clear any existing options
+  zoneSelect.innerHTML = "";
+
+  // Add the placeholder again
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose Your Zone";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  zoneSelect.appendChild(placeholder);
 
   db.collection("zones").get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -20,6 +31,7 @@ function loadZones() {
     console.error("Error loading zones:", error);
   });
 }
+
 
 
 // DOM elements
