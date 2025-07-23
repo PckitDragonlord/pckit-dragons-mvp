@@ -1,120 +1,136 @@
-
-// main.js (Firebase v8 syntax compatible)
-
-firebase.auth().onAuthStateChanged(async (user) => {
+// Firebase v8 setup assumed
+firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
-    document.getElementById("user-info").textContent = `Logged in as ${user.displayName}`;
-    document.getElementById("logout").style.display = "block";
-    document.getElementById("dragon-select").style.display = "block";
-    document.getElementById("zone-select").style.display = "block";
-    document.getElementById("explore-zone").style.display = "block";
+    console.log("User signed in:", user.displayName);
     loadPlayerDragon(user.uid);
+    updateHoardDisplay(user.uid);
   } else {
-    document.getElementById("user-info").textContent = "Not signed in";
-    document.getElementById("logout").style.display = "none";
-    document.getElementById("dragon-select").style.display = "none";
-    document.getElementById("zone-select").style.display = "none";
-    document.getElementById("explore-zone").style.display = "none";
+    console.log("No user signed in.");
   }
 });
 
-document.getElementById("logout").onclick = () => firebase.auth().signOut();
+window.onload = function () {
+  const signInButton = document.getElementById("signInButton");
+  const signOutButton = document.getElementById("signOutButton");
+  const dragonSelect = document.getElementById("dragonSelect");
+  const zoneDropdown = document.getElementById("zoneDropdown");
+  const exploreButton = document.getElementById("exploreButton");
+  const resolveButton = document.getElementById("resolveButton");
+  const hoardScore = document.getElementById("hoardScore");
+  const treasureList = document.getElementById("treasureList");
 
-document.getElementById("dragon-select").onchange = async (e) => {
-  const dragonId = e.target.value;
-  const user = firebase.auth().currentUser;
-  if (user && dragonId) {
-    await firebase.firestore().collection("players").doc(user.uid).set({ dragonId }, { merge: true });
-    loadPlayerDragon(user.uid);
+  if (signInButton) {
+    signInButton.onclick = function () {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider).catch(function (error) {
+        console.error("Sign in error", error);
+      });
+    };
   }
-};
 
-async function loadPlayerDragon(uid) {
-  const playerSnap = await firebase.firestore().collection("players").doc(uid).get();
-  if (playerSnap.exists) {
-    const data = playerSnap.data();
-    const dragonSnap = await firebase.firestore().collection("dragons").doc(data.dragonId).get();
-    if (dragonSnap.exists) {
-      document.getElementById("dragon-info").textContent = `Your dragon: ${dragonSnap.data().name}`;
+  if (signOutButton) {
+    signOutButton.onclick = function () {
+      firebase.auth().signOut();
+    };
+  }
+
+  if (dragonSelect) {
+    dragonSelect.onchange = function () {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const selectedDragon = dragonSelect.value;
+      firebase.firestore().collection("players").doc(user.uid).set({
+        dragon: selectedDragon
+      }, { merge: true });
+      updateHoardDisplay(user.uid);
+    };
+  }
+
+  if (zoneDropdown && exploreButton) {
+    exploreButton.onclick = async function () {
+      const zoneId = zoneDropdown.value;
+      const booksRef = firebase.firestore().collection("adventureBooks");
+      const snapshot = await booksRef.where("zoneId", "==", zoneId).get();
+      if (snapshot.empty) {
+        alert("No books for this zone.");
+        return;
+      }
+      const books = [];
+      snapshot.forEach(doc => books.push({ id: doc.id, ...doc.data() }));
+      const randomBook = books[Math.floor(Math.random() * books.length)];
+      document.getElementById("currentBook").textContent = randomBook.title;
+      document.getElementById("resolveButton").style.display = "inline";
+      document.getElementById("resolveButton").dataset.bookId = randomBook.id;
+    };
+  }
+
+  if (resolveButton) {
+    resolveButton.onclick = async function () {
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const bookId = resolveButton.dataset.bookId;
+      const bookRef = firebase.firestore().collection("adventureBooks").doc(bookId);
+      const bookSnap = await bookRef.get();
+      if (!bookSnap.exists) return;
+
+      const book = bookSnap.data();
+      const treasures = book.treasures;
+      const randomTreasure = treasures[Math.floor(Math.random() * treasures.length)];
+
+      addTreasureToHoard(user.uid, randomTreasure);
+    };
+  }
+
+  async function loadPlayerDragon(uid) {
+    const playerRef = firebase.firestore().collection("players").doc(uid);
+    const docSnap = await playerRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (dragonSelect) dragonSelect.value = data.dragon || "Starstorm";
     }
   }
-  updateHoardDisplay(uid);
-}
 
-async function updateHoardDisplay(uid) {
-  const playerSnap = await firebase.firestore().collection("players").doc(uid).get();
-  if (playerSnap.exists) {
+  async function updateHoardDisplay(uid) {
+    const playerRef = firebase.firestore().collection("players").doc(uid);
+    const playerSnap = await playerRef.get();
+    if (!playerSnap.exists) return;
+
     const playerData = playerSnap.data();
-    const hoardRef = firebase.firestore().collection("hoards").doc(uid);
-    const hoardSnap = await hoardRef.get();
-    if (hoardSnap.exists) {
-      const hoard = hoardSnap.data().treasures || [];
-      document.getElementById("hoard-display").textContent = `Hoard: ${hoard.join(", ")}`;
-    } else {
-      document.getElementById("hoard-display").textContent = "Hoard: (empty)";
-    }
-  }
-}
+    const hoard = playerData.hoard || [];
+    const dragon = playerData.dragon || "Starstorm";
 
-document.getElementById("explore-zone").onclick = async () => {
-  const zoneId = document.getElementById("zone-select").value;
-  if (!zoneId) return;
+    const treasuresRef = firebase.firestore().collection("treasures");
+    const snapshot = await treasuresRef.where(firebase.firestore.FieldPath.documentId(), "in", hoard).get();
+    let score = 0;
+    let list = "";
 
-  const booksSnap = await firebase.firestore().collection("adventureBooks").where("zoneId", "==", zoneId).get();
-  const books = booksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    snapshot.forEach(doc => {
+      const treasure = doc.data();
+      list += treasure.name + " (" + treasure.type + ")\n";
+      if (treasure.type.startsWith(dragon.substring(0, 4).toLowerCase())) {
+        score += 2;
+      } else {
+        score += 1;
+      }
+    });
 
-  const messageBox = document.getElementById("message-box");
-  const resolveButton = document.getElementById("resolve-adventure");
-
-  if (books.length === 0) {
-    messageBox.textContent = "No books associated with this zone.";
-    resolveButton.style.display = "none";
-    return;
+    if (hoardScore) hoardScore.textContent = "Score: " + score;
+    if (treasureList) treasureList.textContent = list;
   }
 
-  const selectedBook = books[Math.floor(Math.random() * books.length)];
-  messageBox.textContent = `You found a book: ${selectedBook.title}`;
-  resolveButton.dataset.bookId = selectedBook.id;
-  resolveButton.dataset.zoneId = zoneId;
-  resolveButton.style.display = "inline-block";
+  async function addTreasureToHoard(uid, treasureId) {
+    const playerRef = firebase.firestore().collection("players").doc(uid);
+    const playerSnap = await playerRef.get();
+    if (!playerSnap.exists) return;
+
+    const playerData = playerSnap.data();
+    const hoard = playerData.hoard || [];
+    hoard.push(treasureId);
+    await playerRef.update({ hoard });
+
+    updateHoardDisplay(uid);
+  }
 };
-
-document.getElementById("resolve-adventure").onclick = async () => {
-  const user = firebase.auth().currentUser;
-  const bookId = document.getElementById("resolve-adventure").dataset.bookId;
-  if (!user || !bookId) return;
-
-  const bookRef = firebase.firestore().collection("adventureBooks").doc(bookId);
-  const bookSnap = await bookRef.get();
-  if (!bookSnap.exists) {
-    document.getElementById("message-box").textContent = "Quest failed: Book disappeared!";
-    return;
-  }
-
-  const book = bookSnap.data();
-  const success = Math.random() < 0.7; // 70% success rate
-
-  if (success) {
-    addTreasureToHoard(user.uid, book.treasureId);
-    document.getElementById("message-box").textContent = `Success! You found ${book.title}'s treasure!`;
-  } else {
-    document.getElementById("message-box").textContent = "Quest did not succeed.";
-  }
-
-  document.getElementById("resolve-adventure").style.display = "none";
-};
-
-async function addTreasureToHoard(uid, treasureId) {
-  const playerSnap = await firebase.firestore().collection("players").doc(uid).get();
-  if (!playerSnap.exists) return;
-
-  const hoardRef = firebase.firestore().collection("hoards").doc(uid);
-  const hoardSnap = await hoardRef.get();
-  const hoard = hoardSnap.exists ? hoardSnap.data().treasures || [] : [];
-  hoard.push(treasureId);
-  await hoardRef.set({ treasures: hoard }, { merge: true });
-  updateHoardDisplay(uid);
-}
 
 
 
