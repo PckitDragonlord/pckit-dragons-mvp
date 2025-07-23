@@ -70,3 +70,31 @@ auth.onAuthStateChanged((user) => {
     signOutBtn.style.display = "none";
   }
 });
+
+exploreBtn.addEventListener("click", () => {
+  const selectedZoneId = zoneSelect.value;
+  if (!selectedZoneId) {
+    alert("Please select a zone first!");
+    return;
+  }
+
+  const booksRef = db.collection("zones").doc(selectedZoneId).collection("books");
+
+  booksRef.get().then((snapshot) => {
+    const books = [];
+    snapshot.forEach((doc) => {
+      books.push(doc.data());
+    });
+
+    if (books.length === 0) {
+      bookDisplay.textContent = "No adventure books available in this zone.";
+      return;
+    }
+
+    const randomBook = books[Math.floor(Math.random() * books.length)];
+    bookDisplay.textContent = `📘 Adventure Book Found: ${randomBook.title}`;
+  }).catch((error) => {
+    console.error("Error fetching books:", error);
+    bookDisplay.textContent = "An error occurred while exploring.";
+  });
+});
