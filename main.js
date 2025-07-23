@@ -39,6 +39,47 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 
+// --- Load Zones ---// --- Firebase Firestore Imports ---
+import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
+
+// --- Auth Elements ---
+const signInBtn = document.getElementById('signInBtn');
+const signOutBtn = document.getElementById('signOutBtn');
+const userInfo = document.getElementById('userInfo');
+
+let currentUser = null;
+
+// --- Auth Functions ---
+signInBtn.onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider);
+};
+
+signOutBtn.onclick = () => {
+  firebase.auth().signOut();
+};
+
+// --- Auth State Listener ---
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    userInfo.textContent = `Signed in as: ${user.displayName}`;
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = 'inline';
+    document.getElementById('dragonSelection').style.display = 'block';
+    loadPlayerDragon();
+    loadZones();
+    updateHoardDisplay(user.uid);
+  } else {
+    currentUser = null;
+    userInfo.textContent = 'Not signed in';
+    signInBtn.style.display = 'inline';
+    signOutBtn.style.display = 'none';
+    document.getElementById('explorationSection').style.display = 'none';
+    document.getElementById('dragonSelection').style.display = 'none';
+  }
+});
+
 // --- Load Zones ---
 async function loadZones() {
   const zoneSelect = document.getElementById('zoneSelect');
@@ -57,9 +98,10 @@ async function loadZones() {
 // --- Load Player Dragon ---
 async function loadPlayerDragon() {
   const dropdown = document.getElementById('dragonDropdown');
-  const docSnap = await db.collection('players').doc(currentUser.uid).get();
+  const playerRef = doc(db, "players", currentUser.uid);
+  const docSnap = await getDoc(playerRef);
 
-  if (docSnap.exists) {
+  if (docSnap.exists()) {
     const data = docSnap.data();
     dropdown.value = data.dragonID || "";
   }
@@ -71,10 +113,7 @@ async function loadPlayerDragon() {
       return;
     }
 
-    await db.collection('players').doc(currentUser.uid).set({
-      dragonID: selectedDragon
-    }, { merge: true });
-
+    await updateDoc(playerRef, { dragonID: selectedDragon });
     alert("Dragon selected: " + selectedDragon);
     document.getElementById('explorationSection').style.display = 'block';
   };
