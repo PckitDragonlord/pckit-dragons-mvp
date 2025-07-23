@@ -91,13 +91,23 @@ document.getElementById('exploreBtn').onclick = async () => {
   });
 
   if (books.length === 0) {
-    alert('No adventure books available in this zone.');
+    document.getElementById('discoveryBox').innerHTML = `<p>No adventure books available in this zone.</p>`;
     return;
   }
 
-  // MVP: Uniform random book selection
   const randomIndex = Math.floor(Math.random() * books.length);
   const selectedBook = books[randomIndex];
 
-  alert(`You discovered a book!\nTitle: ${selectedBook.title}\nRarity: ${selectedBook.rarity}\nDifficulty: ${selectedBook.difficulty}`);
+  document.getElementById('discoveryBox').innerHTML = `
+    <div class="book-card">
+      <h3>${selectedBook.title}</h3>
+      <p><strong>Rarity:</strong> ${selectedBook.rarity}</p>
+      <p><strong>Difficulty:</strong> ${selectedBook.difficulty}</p>
+      <!-- Placeholder for cover art -->
+      <div class="book-cover-placeholder">
+        <!-- later, insert: <img src="${selectedBook.coverUrl}" alt="Book Cover" /> -->
+      </div>
+    </div>
+  `;
 };
+
