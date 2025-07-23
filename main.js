@@ -74,28 +74,32 @@ auth.onAuthStateChanged((user) => {
 
 exploreBtn.addEventListener("click", () => {
   const selectedZoneId = zoneSelect.value;
+
   if (!selectedZoneId) {
-    alert("Please select a zone first!");
+    alert("Please choose a zone first.");
     return;
   }
 
-  const booksRef = db.collection("zones").doc(selectedZoneId).collection("books");
+  db.collection("adventureBooks")
+    .where("zoneId", "==", selectedZoneId)
+    .get()
+    .then(snapshot => {
+      if (snapshot.empty) {
+        alert("No adventure books available in this zone.");
+        return;
+      }
 
-  booksRef.get().then((snapshot) => {
-    const books = [];
-    snapshot.forEach((doc) => {
-      books.push(doc.data());
+      let bookList = "Available Adventures:\n\n";
+      snapshot.forEach(doc => {
+        const book = doc.data();
+        bookList += `📘 ${book.title} [${book.difficulty}, ${book.rarity}]\n`;
+      });
+
+      alert(bookList);
+    })
+    .catch(error => {
+      console.error("Error fetching adventure books:", error);
+      alert("Failed to fetch books. Check the console for details.");
     });
-
-    if (books.length === 0) {
-      bookDisplay.textContent = "No adventure books available in this zone.";
-      return;
-    }
-
-    const randomBook = books[Math.floor(Math.random() * books.length)];
-    bookDisplay.textContent = `📘 Adventure Book Found: ${randomBook.title}`;
-  }).catch((error) => {
-    console.error("Error fetching books:", error);
-    bookDisplay.textContent = "An error occurred while exploring.";
-  });
 });
+
