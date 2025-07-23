@@ -4,16 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>P'ckit Dragons MVP</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
   <h1>Welcome to P'ckit Dragons</h1>
 
-  <div>
-    <button id="signInBtn">Sign in with Google</button>
-    <button id="signOutBtn" style="display:none;">Sign Out</button>
-    <p id="userInfo">Not signed in</p>
-  </div>
-
+  <!-- Dragon selection dropdown (shown only if player has no dragon yet) -->
   <div id="dragonSelection" style="display:none;">
     <h3>Choose Your Dragon</h3>
     <select id="dragonDropdown">
@@ -28,6 +24,14 @@
     <button id="confirmDragon">Confirm</button>
   </div>
 
+  <!-- Auth section -->
+  <div>
+    <button id="signInBtn">Sign in with Google</button>
+    <button id="signOutBtn" style="display:none;">Sign Out</button>
+    <p id="userInfo">Not signed in</p>
+  </div>
+
+  <!-- Exploration section -->
   <div id="explorationSection" style="margin-top: 20px;">
     <label for="zoneSelect">Choose a Zone:</label>
     <select id="zoneSelect">
@@ -36,13 +40,15 @@
     <button id="exploreBtn">Explore</button>
   </div>
 
+  <!-- Book display area -->
   <div id="bookList"></div>
 
-  <!-- Firebase v8 SDKs -->
+  <!-- Firebase SDKs (v8.x) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+  <!-- Firebase config and main game logic -->
   <script src="./firebase.js"></script>
   <script src="./main.js"></script>
 </body>
