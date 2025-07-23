@@ -12,7 +12,8 @@ var firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 // Get the currently selected dragon ID
 function getSelectedDragonId() {
