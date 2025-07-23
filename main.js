@@ -72,6 +72,61 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
+import { auth, db } from './firebase.js';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+let currentPlayerId = null;
+let currentDragonId = null;
+
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    document.getElementById('signOut').style.display = 'block';
+    document.getElementById('signOut').onclick = () => auth.signOut();
+    document.body.insertAdjacentHTML('afterbegin', `<p>Signed in as: ${user.displayName}</p>`);
+
+    currentPlayerId = user.uid;
+    const playerRef = doc(db, 'players', currentPlayerId);
+    const playerSnap = await getDoc(playerRef);
+
+    if (!playerSnap.exists()) {
+      await setDoc(playerRef, { name: user.displayName });
+    }
+
+    const playerData = (await getDoc(playerRef)).data();
+    currentDragonId = playerData.dragonId;
+
+    if (!currentDragonId) {
+      document.getElementById('dragonSelection').style.display = 'block';
+    } else {
+      console.log(`Player already has dragon: ${currentDragonId}`);
+    }
+  }
+});
+
+document.getElementById('confirmDragon').addEventListener('click', async () => {
+  const selectedDragon = document.getElementById('dragonDropdown').value;
+
+  if (!selectedDragon) {
+    alert('Please select a dragon.');
+    return;
+  }
+
+  const playerRef = doc(db, 'players', currentPlayerId);
+  await updateDoc(playerRef, {
+    dragonId: selectedDragon
+  });
+
+  alert(`Dragon ${selectedDragon} selected!`);
+  document.getElementById('dragonSelection').style.display = 'none';
+  currentDragonId = selectedDragon;
+});
+
+
 exploreBtn.addEventListener("click", () => {
   const selectedZoneId = zoneSelect.value;
   const bookListDiv = document.getElementById("bookList");
