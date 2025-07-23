@@ -38,8 +38,9 @@ function setSelectedDragonId(id) {
 }
 
 function getSelectedDragonId() {
-  return selectedDragonId;
+  return "8KQVjQB1WOVUBPyOPKwfs0xDzle2"; // Temporarily hardcode for testing
 }
+
 
 
 // Firebase config
@@ -487,6 +488,9 @@ try {
 } catch (error) {
   console.error("Error updating hoard in Firestore:", error);
 }
+  updateHoardScore(hoard);
+  displayHoard();
+  console.log("Post-PvP hoard update complete");
 
   const treasureDoc = await db.collection("treasures").doc(pickedTreasureId).get();
   const treasureData = treasureDoc.data();
