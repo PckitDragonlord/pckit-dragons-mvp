@@ -276,17 +276,21 @@ async function loadPvPOpponents(currentUserId) {
   pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
   const snapshot = await firebase.firestore().collection('players').get();
 
-  snapshot.forEach(async (doc) => {
+  for (const doc of snapshot.docs) {
     if (doc.id !== currentUserId) {
       const playerData = doc.data();
-      const userRef = await firebase.firestore().collection('users').doc(doc.id).get(); // Optional: for displayName
+
+      // Look for a display name in the 'players' collection itself
+      const displayName = playerData.displayName || `Player (${doc.id})`;
 
       const option = document.createElement('option');
       option.value = doc.id;
-      option.textContent = userRef.exists ? userRef.data().displayName || `Player (${doc.id})` : `Player (${doc.id})`;
+      option.textContent = displayName;
       pvpDropdown.appendChild(option);
     }
-  });
+  }
+}
+;
 }
 
 // Trigger PvP opponent loading after login
