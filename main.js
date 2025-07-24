@@ -336,9 +336,10 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
   if (!displayName || !currentUser) return;
 
   try {
-    await setDoc(doc(db, "players", currentUser.uid), {
-      displayName
-    }, { merge: true });
+  await firebase.firestore().collection('players').doc(currentUser.uid).set({
+  displayName: displayName
+}, { merge: true });
+
 
     alert("Display name saved!");
     loadOpponentOptions(); // refresh the dropdown after saving
