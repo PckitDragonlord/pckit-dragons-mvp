@@ -483,6 +483,14 @@ async function populateTradeDropdowns() {
     const ownSelect = document.getElementById("proposeOwnTreasure");
     const desiredSelect = document.getElementById("proposeDesiredTreasure");
 
+    console.log("ownSelect element:", ownSelect);
+    console.log("desiredSelect element:", desiredSelect);
+
+    if (!ownSelect || !desiredSelect) {
+      console.warn("One or both dropdown elements not found in the DOM.");
+      return;
+    }
+
     // Clear old options
     ownSelect.innerHTML = `<option value="">-- Choose --</option>`;
     desiredSelect.innerHTML = `<option value="">-- Choose --</option>`;
@@ -496,7 +504,10 @@ async function populateTradeDropdowns() {
       return;
     }
 
-    const treasureIds = playerDoc.data().treasureIds || [];
+    const playerData = playerDoc.data();
+    console.log("Fetched playerDoc:", playerData);
+
+    const treasureIds = playerData.treasureIds || [];
     console.log("Player treasure IDs:", treasureIds);
 
     for (const treasureId of treasureIds) {
@@ -510,6 +521,7 @@ async function populateTradeDropdowns() {
         option.value = treasureId;
         option.textContent = label;
         ownSelect.appendChild(option);
+        console.log("✅ Added to ownSelect:", label);
       } else {
         console.warn("Treasure not found in Firestore:", treasureId);
       }
@@ -525,6 +537,8 @@ async function populateTradeDropdowns() {
       option.textContent = label;
       desiredSelect.appendChild(option);
     });
+
+    console.log("✅ Finished populating both dropdowns.");
 
   } catch (error) {
     console.error("Error loading trade dropdowns:", error);
