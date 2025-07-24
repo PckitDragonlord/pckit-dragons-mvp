@@ -1,3 +1,7 @@
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+const db = getFirestore();
+
+
 // main.js (no firebaseConfig or init here — all in firebase.js)
 
 window.addEventListener('DOMContentLoaded', () => {
