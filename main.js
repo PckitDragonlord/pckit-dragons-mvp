@@ -71,17 +71,24 @@ const playerDoc = await playerRef.get();
   }
 });
 
-  async function loadZones() {
-    zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
-    const snapshot = await firebase.firestore().collection('zones').get();
+async function loadZones() {
+  console.log("Loading zones...");
+  zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
+  try {
+    const snapshot = await db.collection('zones').get();
     snapshot.forEach(doc => {
       const zone = doc.data();
+      console.log("Zone found:", zone.name); // <-- add this
       const option = document.createElement('option');
       option.value = doc.id;
       option.textContent = zone.name;
       zoneSelect.appendChild(option);
     });
+  } catch (error) {
+    console.error("Failed to load zones:", error);
   }
+}
+
 
   async function loadPlayerDragon() {
     const docSnap = await firebase.firestore().collection('players').doc(currentUser.uid).get();
