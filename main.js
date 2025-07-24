@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
 const playerDoc = await playerRef.get();
 
 
-    if (!playerDoc.exists()) {
+    if (!playerDoc.exists) {
      await playerRef.set( {
         username: user.displayName || "New Player",
         email: user.email || "",
