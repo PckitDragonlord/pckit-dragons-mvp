@@ -1,8 +1,4 @@
 
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-
 // main.js (no firebaseConfig or init here — all in firebase.js)
 
 window.addEventListener('DOMContentLoaded', () => {
