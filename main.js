@@ -43,6 +43,12 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('explorationSection').style.display = 'none';
       document.getElementById('dragonSelection').style.display = 'none';
     }
+    // After setting currentUser
+const playerDoc = await getDoc(doc(db, "players", currentUser.uid));
+if (playerDoc.exists() && playerDoc.data().displayName) {
+  document.getElementById('displayNameInput').value = playerDoc.data().displayName;
+}
+
   });
 
   async function loadZones() {
@@ -290,6 +296,24 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 
+// Save Display Name
+document.getElementById('saveDisplayNameBtn').addEventListener('click', async () => {
+  const displayName = document.getElementById('displayNameInput').value.trim();
+  if (!displayName || !currentUser) return;
+
+  try {
+    await setDoc(doc(db, "players", currentUser.uid), {
+      displayName
+    }, { merge: true });
+
+    alert("Display name saved!");
+    loadOpponentOptions(); // refresh the dropdown after saving
+  } catch (error) {
+    console.error("Error saving display name:", error);
+  }
+});
+
+  
 });
 
 
