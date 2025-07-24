@@ -211,37 +211,57 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
   }
 
-  async function updateHoardDisplay(userId) {
-    const playerRef = firebase.firestore().collection("players").doc(userId);
-    const playerSnap = await playerRef.get();
+ async function updateHoardDisplay(userId) {
+  const playerRef = firebase.firestore().collection("players").doc(userId);
+  const playerSnap = await playerRef.get();
 
-    hoardList.innerHTML = '';
-    let score = 0;
+  hoardList.innerHTML = '';
+  let score = 0;
 
-    if (playerSnap.exists) {
-      const hoardMap = playerSnap.data().hoard || {};
+  let selectedDragonId = null;
+  let preferredType = null;
 
-      Object.values(hoardMap).forEach(treasure => {
-        const count = treasure.count || 1;
-        const li = document.createElement('li');
-        li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
-        hoardList.appendChild(li);
+  if (playerSnap.exists) {
+    const playerData = playerSnap.data();
+    selectedDragonId = playerData.dragonID || "";
+    const hoardMap = playerData.hoard || {};
 
-        let rarityScore = 0;
-        switch ((treasure.rarity || '').toLowerCase()) {
-          case 'common': rarityScore = 1; break;
-          case 'uncommon': rarityScore = 3; break;
-          case 'heroic': rarityScore = 6; break;
-          case 'epic': rarityScore = 10; break;
-          case 'legendary': rarityScore = 20; break;
-          case 'mythic': rarityScore = 30; break;
-        }
-        score += rarityScore * count;
-      });
+    // 🔍 Fetch selected dragon's preferred treasure type
+    if (selectedDragonId) {
+      const dragonSnap = await firebase.firestore().collection("dragons").doc(selectedDragonId).get();
+      if (dragonSnap.exists) {
+        preferredType = dragonSnap.data().type || null; // e.g., "reli", "musi", etc.
+      }
     }
 
-    hoardScoreSpan.textContent = score;
+    Object.values(hoardMap).forEach(treasure => {
+      const count = treasure.count || 1;
+      const li = document.createElement('li');
+      li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
+      hoardList.appendChild(li);
+
+      let rarityScore = 0;
+      switch ((treasure.rarity || '').toLowerCase()) {
+        case 'common': rarityScore = 1; break;
+        case 'uncommon': rarityScore = 3; break;
+        case 'heroic': rarityScore = 6; break;
+        case 'epic': rarityScore = 10; break;
+        case 'legendary': rarityScore = 20; break;
+        case 'mythic': rarityScore = 30; break;
+      }
+
+      // ⚖️ Apply 0.5x penalty for non-preferred, non-universal types
+      const treasureType = (treasure.type || "").toLowerCase();
+      const isUniversal = treasureType === "univ";
+      const isPreferred = treasureType === (preferredType || "").toLowerCase();
+      const multiplier = isUniversal || isPreferred ? 1.0 : 0.5;
+
+      score += rarityScore * multiplier * count;
+    });
   }
+
+  hoardScoreSpan.textContent = score;
+}
 });
 
 
