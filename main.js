@@ -461,6 +461,47 @@ async function proposeTrade() {
   }
 }
 
+async function populateTradeDropdowns() {
+  try {
+    const ownSelect = document.getElementById("proposeOwnTreasure");
+    const desiredSelect = document.getElementById("proposeDesiredTreasure");
+
+    // Clear old options
+    ownSelect.innerHTML = `<option value="">-- Choose --</option>`;
+    desiredSelect.innerHTML = `<option value="">-- Choose --</option>`;
+
+    // Fetch current user's hoard
+    const playerRef = db.collection("players").doc(currentUser.uid);
+    const playerDoc = await playerRef.get();
+    const treasureIds = playerDoc.data().treasureIds || [];
+
+    for (const treasureId of treasureIds) {
+      const treasureDoc = await db.collection("treasures").doc(treasureId).get();
+      if (treasureDoc.exists) {
+        const data = treasureDoc.data();
+        const label = `${data.name} — Rarity: ${data.rarity}`;
+        const option = document.createElement("option");
+        option.value = treasureId;
+        option.textContent = label;
+        ownSelect.appendChild(option);
+      }
+    }
+
+    // Fetch all treasures for desired list
+    const allTreasuresSnapshot = await db.collection("treasures").get();
+    allTreasuresSnapshot.forEach((doc) => {
+      const data = doc.data();
+      const label = `${data.name} — Rarity: ${data.rarity}`;
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = label;
+      desiredSelect.appendChild(option);
+    });
+
+  } catch (error) {
+    console.error("Error loading trade dropdowns:", error);
+  }
+}
 
 
 document.getElementById("pvpChallengeBtn").onclick = async () => {
