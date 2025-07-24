@@ -465,9 +465,9 @@ async function proposeTrade() {
 
 async function populateTradeDropdowns() {
   if (!currentUser || !currentUser.uid) {
-  console.warn("populateTradeDropdowns: currentUser is not set.");
-  return;
-}
+    console.warn("populateTradeDropdowns: currentUser is not set.");
+    return;
+  }
 
   try {
     const ownSelect = document.getElementById("proposeOwnTreasure");
@@ -480,17 +480,28 @@ async function populateTradeDropdowns() {
     // Fetch current user's hoard
     const playerRef = db.collection("players").doc(currentUser.uid);
     const playerDoc = await playerRef.get();
+
+    if (!playerDoc.exists) {
+      console.warn("No player document found for current user.");
+      return;
+    }
+
     const treasureIds = playerDoc.data().treasureIds || [];
+    console.log("Player treasure IDs:", treasureIds);
 
     for (const treasureId of treasureIds) {
+      console.log("Checking treasureId:", treasureId);
       const treasureDoc = await db.collection("treasures").doc(treasureId).get();
       if (treasureDoc.exists) {
         const data = treasureDoc.data();
+        console.log("Treasure found:", data);
         const label = `${data.name} — Rarity: ${data.rarity}`;
         const option = document.createElement("option");
         option.value = treasureId;
         option.textContent = label;
         ownSelect.appendChild(option);
+      } else {
+        console.warn("Treasure not found in Firestore:", treasureId);
       }
     }
 
