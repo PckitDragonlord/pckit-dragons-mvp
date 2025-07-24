@@ -59,7 +59,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
       loadPlayerDragon();
       await loadZones();  // <-- Make sure zones load AFTER login
-      await loadPvPOpponents();  // <-- Add this new line
+      await loadPvPOpponents(user.uid);  // ✅ Pass UID to exclude self
 
       updateHoardDisplay(user.uid);
 
@@ -411,7 +411,7 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
   
 });
 
-async function loadPvPOpponents(currentUserId) {
+async function loadOpponentOptions() {
   const pvpDropdown = document.getElementById('pvpOpponentDropdown');
   pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
 
@@ -419,9 +419,9 @@ async function loadPvPOpponents(currentUserId) {
     const snapshot = await firebase.firestore().collection('players').get();
 
     snapshot.forEach(doc => {
-      if (doc.id !== currentUserId) {
+      if (doc.id !== currentUser.uid) {  // ✅ Skip current player
         const playerData = doc.data();
-        const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
+        const displayName = playerData.displayName || `Player (${doc.id})`;
 
         const option = document.createElement('option');
         option.value = doc.id;
@@ -429,10 +429,12 @@ async function loadPvPOpponents(currentUserId) {
         pvpDropdown.appendChild(option);
       }
     });
+
   } catch (error) {
     console.error("Error loading opponents:", error);
   }
 }
+
 
 
 document.getElementById("pvpChallengeBtn").onclick = async () => {
