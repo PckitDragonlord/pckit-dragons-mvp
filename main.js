@@ -26,36 +26,54 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
- firebase.auth().onAuthStateChanged(async (user) => {
+firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
-    currentUser = user;
-    userInfo.textContent = `Signed in as: ${user.displayName}`;
-    signInBtn.style.display = 'none';
-    signOutBtn.style.display = 'inline';
-    document.getElementById('dragonSelection').style.display = 'block';
+    try {
+      currentUser = user;
+      userInfo.textContent = `Signed in as: ${user.displayName}`;
+      signInBtn.style.display = 'none';
+      signOutBtn.style.display = 'inline';
+      document.getElementById('dragonSelection').style.display = 'block';
+      document.getElementById('explorationSection').style.display = 'block'; // <== make sure it's shown
 
-    // ✅ Ensure Firestore player document exists
-  const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
-const playerDoc = await playerRef.get();
+      // Ensure Firestore player document exists
+      const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
+      const playerDoc = await playerRef.get();
 
+      if (!playerDoc.exists) {
+        await playerRef.set({
+          username: user.displayName || "New Player",
+          email: user.email || "",
+          hoardScore: 0,
+          activeDragonId: "starstorm001",
+          treasureIds: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
 
-    if (!playerDoc.exists) {
-     await playerRef.set( {
-        username: user.displayName || "New Player",
-        email: user.email || "",
-        hoardScore: 0,
-        activeDragonId: "starstorm001", // or some other default
-        treasureIds: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      // Pre-fill display name
+      const updatedPlayerDoc = await playerRef.get(); // not getDoc() in v8
+      if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
+        document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
+      }
 
-      });
+      loadPlayerDragon();
+      await loadZones();  // <-- Make sure zones load AFTER login
+      updateHoardDisplay(user.uid);
+
+    } catch (error) {
+      console.error("Error during sign-in logic:", error);
     }
+  } else {
+    currentUser = null;
+    userInfo.textContent = 'Not signed in';
+    signInBtn.style.display = 'inline';
+    signOutBtn.style.display = 'none';
+    document.getElementById('explorationSection').style.display = 'none';
+    document.getElementById('dragonSelection').style.display = 'none';
+  }
+});
 
-    // ✅ Optionally pre-fill display name input if found
-   const updatedPlayerDoc = await playerRef.get();  // make sure we have fresh copy
-    if (updatedPlayerDoc.exists() && updatedPlayerDoc.data().displayName) {
-      document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
-    }
 
     loadPlayerDragon();
     loadZones();
