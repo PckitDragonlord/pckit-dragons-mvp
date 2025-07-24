@@ -1,3 +1,4 @@
+let currentUser = null;
 
 // main.js (no firebaseConfig or init here — all in firebase.js)
 
