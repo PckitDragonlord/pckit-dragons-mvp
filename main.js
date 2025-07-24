@@ -465,6 +465,11 @@ async function proposeTrade() {
 }
 
 async function populateTradeDropdowns() {
+  if (!currentUser || !currentUser.uid) {
+  console.warn("populateTradeDropdowns: currentUser is not set.");
+  return;
+}
+
   try {
     const ownSelect = document.getElementById("proposeOwnTreasure");
     const desiredSelect = document.getElementById("proposeDesiredTreasure");
