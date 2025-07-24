@@ -402,24 +402,24 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
 });
 
 async function loadOpponentOptions() {
-  const dropdown = document.getElementById('pvpOpponentDropdown');
-  dropdown.innerHTML = '<option value="">-- Select Opponent --</option>';
-
+  const opponentSelect = document.getElementById("pvpOpponentDropdown");
+  opponentSelect.innerHTML = `<option value="">-- Select an Opponent --</option>`;
   try {
-    const snapshot = await firebase.firestore().collection('players').get();
+    const snapshot = await db.collection("players").get();
     snapshot.forEach(doc => {
       if (doc.id !== currentUser.uid) {
         const data = doc.data();
-        const option = document.createElement('option');
+        const option = document.createElement("option");
         option.value = doc.id;
-        option.textContent = data.displayName || data.username || "Unnamed Player";
-        dropdown.appendChild(option);
+        option.textContent = data.displayName || "Unnamed Player";
+        opponentSelect.appendChild(option);
       }
     });
   } catch (error) {
     console.error("Error loading opponents:", error);
   }
 }
+
 
 document.getElementById("pvpChallengeBtn").onclick = async () => {
   await pvpChallenge();
