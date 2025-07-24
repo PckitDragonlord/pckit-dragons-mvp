@@ -435,6 +435,32 @@ async function loadOpponentOptions() {
   }
 }
 
+async function proposeTrade() {
+  const proposerTreasureId = document.getElementById("proposeOwnTreasure").value;
+  const desiredTreasureId = document.getElementById("proposeDesiredTreasure").value;
+
+  if (!proposerTreasureId || !desiredTreasureId) {
+    alert("Please select both treasures.");
+    return;
+  }
+
+  try {
+    await firebase.firestore().collection("trades").add({
+      proposerId: currentUser.uid,
+      proposerTreasureId,
+      desiredTreasureId,
+      responderId: "",
+      status: "open",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Trade proposed successfully!");
+  } catch (error) {
+    console.error("Failed to propose trade:", error);
+    alert("There was an error creating the trade.");
+  }
+}
+
 
 
 document.getElementById("pvpChallengeBtn").onclick = async () => {
