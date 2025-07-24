@@ -14,8 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
   const hoardScoreSpan = document.getElementById('hoardScore');
-
-  let currentUser = null;
+  
   let currentBook = null;
 
   signInBtn.onclick = () => {
