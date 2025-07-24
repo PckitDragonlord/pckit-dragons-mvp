@@ -59,6 +59,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
       loadPlayerDragon();
       await loadZones();  // <-- Make sure zones load AFTER login
+      await loadOpponentOptions();  // <-- Add this new line
+
       updateHoardDisplay(user.uid);
 
     } catch (error) {
@@ -351,5 +353,24 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
   
 });
 
+async function loadOpponentOptions() {
+  const dropdown = document.getElementById('pvpOpponentDropdown');
+  dropdown.innerHTML = '<option value="">-- Select Opponent --</option>';
+
+  try {
+    const snapshot = await firebase.firestore().collection('players').get();
+    snapshot.forEach(doc => {
+      if (doc.id !== currentUser.uid) {
+        const data = doc.data();
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = data.displayName || data.username || "Unnamed Player";
+        dropdown.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading opponents:", error);
+  }
+}
 
 
