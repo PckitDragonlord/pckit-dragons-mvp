@@ -297,7 +297,8 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 
     const hoardField = `hoard.${treasure.id}`;
     await playerRef.update({
-      [hoardField]: updatedTreasure
+      [hoardField]: updatedTreasure,
+      treasureIds: firebase.firestore.FieldValue.arrayUnion(treasure.id) 
     });
 
     console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
