@@ -399,7 +399,7 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
 
 
     alert("Display name saved!");
-    loadOpponentOptions(); // refresh the dropdown after saving
+    loadPvPOpponents(); // refresh the dropdown after saving
   } catch (error) {
     console.error("Error saving display name:", error);
   }
@@ -408,18 +408,22 @@ document.getElementById('saveDisplayNameBtn').addEventListener('click', async ()
   
 });
 
-async function loadOpponentOptions() {
-  const opponentSelect = document.getElementById("pvpOpponentDropdown");
-  opponentSelect.innerHTML = `<option value="">-- Select an Opponent --</option>`;
+async function loadPvPOpponents(currentUserId) {
+  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
+  pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
+
   try {
-    const snapshot = await db.collection("players").get();
+    const snapshot = await firebase.firestore().collection('players').get();
+
     snapshot.forEach(doc => {
-      if (doc.id !== currentUser.uid) {
-        const data = doc.data();
-        const option = document.createElement("option");
+      if (doc.id !== currentUserId) {
+        const playerData = doc.data();
+        const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
+
+        const option = document.createElement('option');
         option.value = doc.id;
-        option.textContent = data.displayName || "Unnamed Player";
-        opponentSelect.appendChild(option);
+        option.textContent = displayName;
+        pvpDropdown.appendChild(option);
       }
     });
   } catch (error) {
