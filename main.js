@@ -60,6 +60,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
       loadPlayerDragon();
       await loadZones();  // <-- Make sure zones load AFTER login
       await loadPvPOpponents(user.uid);  // ✅ Pass UID to exclude self
+      await populateTradeDropdowns();
+
 
       updateHoardDisplay(user.uid);
 
