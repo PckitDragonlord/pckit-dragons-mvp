@@ -262,6 +262,34 @@ window.addEventListener('DOMContentLoaded', () => {
 
   hoardScoreSpan.textContent = score;
 }
+  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
+const pvpBtn = document.getElementById('pvpChallengeBtn');
+const pvpResultBox = document.getElementById('pvpResultBox');
+
+async function loadPvPOpponents(currentUserId) {
+  pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
+  const snapshot = await firebase.firestore().collection('players').get();
+
+  snapshot.forEach(async (doc) => {
+    if (doc.id !== currentUserId) {
+      const playerData = doc.data();
+      const userRef = await firebase.firestore().collection('users').doc(doc.id).get(); // Optional: for displayName
+
+      const option = document.createElement('option');
+      option.value = doc.id;
+      option.textContent = userRef.exists ? userRef.data().displayName || `Player (${doc.id})` : `Player (${doc.id})`;
+      pvpDropdown.appendChild(option);
+    }
+  });
+}
+
+// Trigger PvP opponent loading after login
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    await loadPvPOpponents(user.uid);
+  }
+});
+
 });
 
 
