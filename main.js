@@ -291,7 +291,6 @@ async function loadPvPOpponents(currentUserId) {
   }
 }
 ;
-}
 
 // Trigger PvP opponent loading after login
 firebase.auth().onAuthStateChanged(async (user) => {
