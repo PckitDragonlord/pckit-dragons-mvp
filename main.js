@@ -421,4 +421,5 @@ async function loadOpponentOptions() {
   }
 }
 
+document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 
