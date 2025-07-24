@@ -281,28 +281,37 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
     await updateHoardDisplay(userId);
   }
 
-  async function addTreasureToHoard(userId, treasure) {
-    const playerRef = firebase.firestore().collection("players").doc(userId);
-    const playerSnap = await playerRef.get();
+ async function addTreasureToHoard(userId, treasure) {
+  const playerRef = firebase.firestore().collection("players").doc(userId);
+  const playerSnap = await playerRef.get();
 
-    if (!playerSnap.exists) return;
+  if (!playerSnap.exists) return;
 
-    const hoard = playerSnap.data().hoard || {};
-    const existing = hoard[treasure.id];
+  const playerData = playerSnap.data();
+  const hoard = playerData.hoard || {};
+  const existing = hoard[treasure.id];
 
-    const updatedTreasure = {
-      ...treasure,
-      count: existing ? existing.count + 1 : 1
-    };
+  const updatedTreasure = {
+    ...treasure,
+    count: existing ? existing.count + 1 : 1
+  };
 
-    const hoardField = `hoard.${treasure.id}`;
-    await playerRef.update({
-      [hoardField]: updatedTreasure,
-      treasureIds: firebase.firestore.FieldValue.arrayUnion(treasure.id) 
-    });
+  const hoardField = `hoard.${treasure.id}`;
 
-    console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
+  // 🟩 Also update treasureIds if necessary
+  const treasureIds = playerData.treasureIds || [];
+  if (!treasureIds.includes(treasure.id)) {
+    treasureIds.push(treasure.id);
   }
+
+  await playerRef.update({
+    [hoardField]: updatedTreasure,
+    treasureIds: treasureIds
+  });
+
+  console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
+}
+
 
  async function updateHoardDisplay(userId) {
   const playerRef = firebase.firestore().collection("players").doc(userId);
