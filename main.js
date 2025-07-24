@@ -34,17 +34,19 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dragonSelection').style.display = 'block';
 
     // ✅ Ensure Firestore player document exists
-    const playerRef = doc(db, "players", currentUser.uid);
-    const playerDoc = await getDoc(playerRef);
+  const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
+const playerDoc = await playerRef.get();
+
 
     if (!playerDoc.exists()) {
-      await setDoc(playerRef, {
+     await playerRef.set( {
         username: user.displayName || "New Player",
         email: user.email || "",
         hoardScore: 0,
         activeDragonId: "starstorm001", // or some other default
         treasureIds: [],
-        createdAt: serverTimestamp()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
       });
     }
 
