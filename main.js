@@ -25,31 +25,48 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-      currentUser = user;
-      userInfo.textContent = `Signed in as: ${user.displayName}`;
-      signInBtn.style.display = 'none';
-      signOutBtn.style.display = 'inline';
-      document.getElementById('dragonSelection').style.display = 'block';
-      loadPlayerDragon();
-      loadZones();
-      updateHoardDisplay(user.uid);
-    } else {
-      currentUser = null;
-      userInfo.textContent = 'Not signed in';
-      signInBtn.style.display = 'inline';
-      signOutBtn.style.display = 'none';
-      document.getElementById('explorationSection').style.display = 'none';
-      document.getElementById('dragonSelection').style.display = 'none';
-    }
-    // After setting currentUser
-const playerDoc = await getDoc(doc(db, "players", currentUser.uid));
-if (playerDoc.exists() && playerDoc.data().displayName) {
-  document.getElementById('displayNameInput').value = playerDoc.data().displayName;
-}
+ firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    currentUser = user;
+    userInfo.textContent = `Signed in as: ${user.displayName}`;
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = 'inline';
+    document.getElementById('dragonSelection').style.display = 'block';
 
-  });
+    // ✅ Ensure Firestore player document exists
+    const playerRef = doc(db, "players", currentUser.uid);
+    const playerDoc = await getDoc(playerRef);
+
+    if (!playerDoc.exists()) {
+      await setDoc(playerRef, {
+        username: user.displayName || "New Player",
+        email: user.email || "",
+        hoardScore: 0,
+        activeDragonId: "starstorm001", // or some other default
+        treasureIds: [],
+        createdAt: serverTimestamp()
+      });
+    }
+
+    // ✅ Optionally pre-fill display name input if found
+    const updatedPlayerDoc = await getDoc(playerRef); // make sure we have fresh copy
+    if (updatedPlayerDoc.exists() && updatedPlayerDoc.data().displayName) {
+      document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
+    }
+
+    loadPlayerDragon();
+    loadZones();
+    updateHoardDisplay(user.uid);
+
+  } else {
+    currentUser = null;
+    userInfo.textContent = 'Not signed in';
+    signInBtn.style.display = 'inline';
+    signOutBtn.style.display = 'none';
+    document.getElementById('explorationSection').style.display = 'none';
+    document.getElementById('dragonSelection').style.display = 'none';
+  }
+});
 
   async function loadZones() {
     zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
