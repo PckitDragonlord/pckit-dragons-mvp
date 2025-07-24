@@ -59,7 +59,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
       loadPlayerDragon();
       await loadZones();  // <-- Make sure zones load AFTER login
-      await loadOpponentOptions();  // <-- Add this new line
+      await loadPvPOpponents();  // <-- Add this new line
 
       updateHoardDisplay(user.uid);
 
