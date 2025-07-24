@@ -354,31 +354,38 @@ const pvpBtn = document.getElementById('pvpChallengeBtn');
 const pvpResultBox = document.getElementById('pvpResultBox');
 
 async function loadPvPOpponents(currentUserId) {
+  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
   pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
-  const snapshot = await firebase.firestore().collection('players').get();
 
-  for (const doc of snapshot.docs) {
-    if (doc.id !== currentUserId) {
-      const playerData = doc.data();
+  try {
+    const snapshot = await firebase.firestore().collection('players').get();
 
-      // Look for a display name in the 'players' collection itself
-      const displayName = playerData.displayName || `Player (${doc.id})`;
+    snapshot.forEach(doc => {
+      if (doc.id !== currentUserId) {
+        const playerData = doc.data();
+        const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
 
-      const option = document.createElement('option');
-      option.value = doc.id;
-      option.textContent = displayName;
-      pvpDropdown.appendChild(option);
-    }
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = displayName;
+        pvpDropdown.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading PvP opponents:", error);
   }
 }
-;
+
 
 // Trigger PvP opponent loading after login
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
+    currentUser = user;
     await loadPvPOpponents(user.uid);
+    // other startup functions...
   }
 });
+
 
 // Save Display Name
 document.getElementById('saveDisplayNameBtn').addEventListener('click', async () => {
