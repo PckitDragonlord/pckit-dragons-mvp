@@ -166,6 +166,9 @@ async function pvpChallenge() {
   }
 }
 
+
+document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
+
   
   exploreBtn.onclick = async () => {
     const zoneId = zoneSelect.value;
