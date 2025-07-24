@@ -52,7 +52,7 @@ const playerDoc = await playerRef.get();
     }
 
     // ✅ Optionally pre-fill display name input if found
-    const updatedPlayerDoc = await getDoc(playerRef); // make sure we have fresh copy
+   const updatedPlayerDoc = await playerRef.get();  // make sure we have fresh copy
     if (updatedPlayerDoc.exists() && updatedPlayerDoc.data().displayName) {
       document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
     }
