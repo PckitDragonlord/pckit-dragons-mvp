@@ -119,6 +119,54 @@ async function loadZones() {
     };
   }
 
+async function pvpChallenge() {
+  const opponentId = document.getElementById('pvpOpponentDropdown').value;
+  const resultBox = document.getElementById('pvpResultBox');
+
+  if (!opponentId) {
+    resultBox.textContent = "Please select an opponent first.";
+    return;
+  }
+
+  try {
+    // Get current player's hoardScore
+    const playerRef = db.collection("players").doc(currentUser.uid);
+    const playerSnap = await playerRef.get();
+    const playerData = playerSnap.data();
+    const playerScore = playerData.hoardScore || 0;
+
+    // Get opponent's hoardScore
+    const opponentRef = db.collection("players").doc(opponentId);
+    const opponentSnap = await opponentRef.get();
+    const opponentData = opponentSnap.data();
+    const opponentScore = opponentData.hoardScore || 0;
+
+    // Determine winner
+    const playerRoll = playerScore * Math.random();
+    const opponentRoll = opponentScore * Math.random();
+
+    let resultText = `
+      You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
+      ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
+      → `;
+
+    if (playerRoll > opponentRoll) {
+      resultText += "You win!";
+    } else if (playerRoll < opponentRoll) {
+      resultText += "You lose!";
+    } else {
+      resultText += "It's a tie!";
+    }
+
+    resultBox.textContent = resultText;
+
+  } catch (error) {
+    console.error("PvP challenge failed:", error);
+    resultBox.textContent = "An error occurred during PvP.";
+  }
+}
+
+  
   exploreBtn.onclick = async () => {
     const zoneId = zoneSelect.value;
     if (!zoneId) {
