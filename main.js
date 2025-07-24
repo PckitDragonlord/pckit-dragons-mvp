@@ -75,20 +75,6 @@ firebase.auth().onAuthStateChanged(async (user) => {
 });
 
 
-    loadPlayerDragon();
-    loadZones();
-    updateHoardDisplay(user.uid);
-
-  } else {
-    currentUser = null;
-    userInfo.textContent = 'Not signed in';
-    signInBtn.style.display = 'inline';
-    signOutBtn.style.display = 'none';
-    document.getElementById('explorationSection').style.display = 'none';
-    document.getElementById('dragonSelection').style.display = 'none';
-  }
-});
-
 async function loadZones() {
   console.log("Loading zones...");
   zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
