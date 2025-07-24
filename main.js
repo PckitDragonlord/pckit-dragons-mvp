@@ -1,5 +1,6 @@
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-const db = getFirestore();
+
+const db = firebase.firestore();
+const auth = firebase.auth();
 
 
 // main.js (no firebaseConfig or init here — all in firebase.js)
