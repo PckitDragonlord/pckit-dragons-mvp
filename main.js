@@ -378,7 +378,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
           },
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
+      }
     
 
       // Pre-fill display name if set
