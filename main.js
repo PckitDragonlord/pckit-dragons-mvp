@@ -270,7 +270,7 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 }
 
 
- async function updateHoardDisplay(userId) {
+async function updateHoardDisplay(userId) {
   const playerRef = firebase.firestore().collection("players").doc(userId);
   const playerSnap = await playerRef.get();
 
@@ -282,23 +282,31 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 
   if (playerSnap.exists) {
     const playerData = playerSnap.data();
-    selectedDragonId = playerData.activeDragonId || ""; // ⚠️ fixed from 'dragonID'
+    selectedDragonId = playerData.activeDragonId || ""; // ✅ use correct field
     const hoardMap = playerData.hoard || {};
 
-    // Get dragon's preferred treasure type
+    // 🔍 Fetch selected dragon's preferred treasure type
     if (selectedDragonId) {
       const dragonSnap = await firebase.firestore().collection("dragons").doc(selectedDragonId).get();
       if (dragonSnap.exists) {
-        preferredType = (dragonSnap.data().type || "").toLowerCase();
+        preferredType = (dragonSnap.data().type || "").toLowerCase(); // e.g., "reli"
+        console.log("Preferred type for dragon", selectedDragonId, "is:", preferredType);
+      } else {
+        console.warn("No dragon found for ID:", selectedDragonId);
       }
     }
 
-    // Calculate hoard score
     Object.values(hoardMap).forEach(treasure => {
       const count = treasure.count || 1;
       const li = document.createElement('li');
       li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
       hoardList.appendChild(li);
+
+      // Debug logs to inspect scoring logic
+      console.log("Treasure:", treasure.name);
+      console.log("Treasure type:", treasure.type);
+      console.log("Preferred type:", preferredType);
+      console.log("Rarity:", treasure.rarity);
 
       let rarityScore = 0;
       switch ((treasure.rarity || '').toLowerCase()) {
@@ -315,19 +323,22 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
       const isPreferred = treasureType === preferredType;
       const multiplier = isUniversal || isPreferred ? 1.0 : 0.5;
 
+      console.log("Applying multiplier:", multiplier);
+
       score += rarityScore * multiplier * count;
     });
   }
 
   hoardScoreSpan.textContent = score;
 
-  // 🔒 Try updating the backend, but don't crash the front-end if it fails
+  // 🔒 Try updating the backend, but don’t crash front-end if it fails
   try {
     await playerRef.update({ hoardScore: score });
   } catch (e) {
     console.warn("Failed to update hoardScore in Firestore:", e);
   }
 }
+
 
 
 window.addEventListener("DOMContentLoaded", () => {
