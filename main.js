@@ -322,50 +322,58 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function pvpChallenge() {
-    const opponentId = pvpDropdown.value;
-    if (!opponentId) {
-      pvpResultBox.textContent = "Please select an opponent first.";
-      return;
-    }
-
-    try {
-      // Get current player's data
-      const playerRef = db.collection("players").doc(currentUser.uid);
-      const playerSnap = await playerRef.get();
-      const playerData = playerSnap.data();
-      const playerScore = playerData.hoardScore || 0;
-
-      // Get opponent's data
-      const opponentRef = db.collection("players").doc(opponentId);
-      const opponentSnap = await opponentRef.get();
-      const opponentData = opponentSnap.data();
-      const opponentScore = opponentData.hoardScore || 0;
-
-      // Determine winner
-      const playerRoll = playerScore * Math.random();
-      const opponentRoll = opponentScore * Math.random();
-
-      let resultText = `
-        You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
-        ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
-        → `;
-
-      if (playerRoll > opponentRoll) {
-        resultText += "You win!";
-      } else if (playerRoll < opponentRoll) {
-        resultText += "You lose!";
-      } else {
-        resultText += "It's a tie!";
-      }
-      pvpResultBox.textContent = resultText;
-
-    } catch (error) {
-      console.error("PvP challenge failed:", error);
-      pvpResultBox.textContent = "An error occurred during PvP.";
-    }
+async function pvpChallenge() {
+  const opponentId = pvpDropdown.value;
+  if (!opponentId) {
+    pvpResultBox.textContent = "Please select an opponent first.";
+    return;
   }
 
+  // Disable button to prevent multiple clicks
+  pvpChallengeBtn.disabled = true;
+  pvpResultBox.textContent = "Challenging...";
+
+  try {
+    // Get current player's data
+    const playerRef = db.collection("players").doc(currentUser.uid);
+    const playerSnap = await playerRef.get();
+    const playerData = playerSnap.data();
+    const playerScore = playerData.hoardScore || 0;
+
+    // Get opponent's data
+    const opponentRef = db.collection("players").doc(opponentId);
+    const opponentSnap = await opponentRef.get();
+    const opponentData = opponentSnap.data();
+    const opponentScore = opponentData.hoardScore || 0;
+
+    // Determine winner
+    const playerRoll = playerScore * Math.random();
+    const opponentRoll = opponentScore * Math.random();
+
+    let resultText = `
+      You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
+      ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
+      → `;
+
+    if (playerRoll > opponentRoll) {
+      resultText += "You win! 🎉 You found a new treasure!";
+      // Call the existing function to drop a random treasure for the winner
+      await dropRandomTreasureAndAddToHoard(currentUser.uid);
+    } else if (playerRoll < opponentRoll) {
+      resultText += "You lose! Better luck next time.";
+    } else {
+      resultText += "It's a tie!";
+    }
+    pvpResultBox.textContent = resultText;
+
+  } catch (error) {
+    console.error("PvP challenge failed:", error);
+    pvpResultBox.textContent = "An error occurred during PvP.";
+  } finally {
+    // Re-enable the button after the challenge is complete
+    pvpChallengeBtn.disabled = false;
+  }
+}
   pvpChallengeBtn.onclick = pvpChallenge;
 
 });
