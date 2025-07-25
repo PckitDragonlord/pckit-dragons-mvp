@@ -1,25 +1,27 @@
-let currentUser = null;
+// main.js
 
-// main.js (no firebaseConfig or init here — all in firebase.js)
-
- const hoardScoreSpan = document.getElementById('hoardScore');
-
-window.addEventListener('DOMContentLoaded', async () => {
-
+window.addEventListener('DOMContentLoaded', () => {
+  // Element References
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const userInfo = document.getElementById('userInfo');
-
-  const dragonDropdown = document.getElementById('dragonDropdown');;
+  const displayNameInput = document.getElementById('displayNameInput');
+  const saveDisplayNameBtn = document.getElementById('saveDisplayNameBtn');
+  const dragonDropdown = document.getElementById('dragonDropdown');
+  const confirmDragonBtn = document.getElementById('confirmDragon');
   const zoneSelect = document.getElementById('zoneSelect');
   const exploreBtn = document.getElementById('exploreBtn');
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
+  const hoardScoreSpan = document.getElementById('hoardScore');
+  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
+  const pvpChallengeBtn = document.getElementById('pvpChallengeBtn');
+  const pvpResultBox = document.getElementById('pvpResultBox');
 
- document.getElementById("submitTradeBtn").onclick = submitTradeProposal;
-
-
+  let currentUser = null;
   let currentBook = null;
+
+  // --- Authentication ---
 
   signInBtn.onclick = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -30,105 +32,121 @@ window.addEventListener('DOMContentLoaded', async () => {
     firebase.auth().signOut();
   };
 
-  
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        currentUser = user;
+        userInfo.textContent = `Signed in as: ${user.displayName}`;
+        signInBtn.style.display = 'none';
+        signOutBtn.style.display = 'inline';
+        document.getElementById('displayNameSection').style.display = 'block';
+        document.getElementById('dragonSelection').style.display = 'block';
+        document.getElementById('explorationSection').style.display = 'block';
+        document.getElementById('hoardSection').style.display = 'block';
+        document.getElementById('pvpSection').style.display = 'block';
 
-  // ✅ All remaining logic (e.g., onAuthStateChanged) continues here
-});
+        const playerRef = db.collection("players").doc(currentUser.uid);
+        const playerDoc = await playerRef.get();
 
-async function loadZones() {
-  console.log("Loading zones...");
-  zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
-  try {
-    const snapshot = await db.collection('zones').get();
-    snapshot.forEach(doc => {
-      const zone = doc.data();
-      console.log("Zone found:", zone.name); // <-- add this
-      const option = document.createElement('option');
-      option.value = doc.id;
-      option.textContent = zone.name;
-      zoneSelect.appendChild(option);
-    });
-  } catch (error) {
-    console.error("Failed to load zones:", error);
+        if (!playerDoc.exists) {
+          await playerRef.set({
+            username: user.displayName || "New Player",
+            email: user.email || "",
+            hoardScore: 0,
+            activeDragonId: null,
+            treasureIds: [],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        const updatedPlayerDoc = await playerRef.get();
+        if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
+          displayNameInput.value = updatedPlayerDoc.data().displayName;
+        }
+
+        // Initial data loading
+        loadPlayerDragon();
+        await loadZones();
+        await loadPvPOpponents(user.uid);
+        await updateHoardDisplay(user.uid);
+
+      } catch (error) {
+        console.error("Error during sign-in logic:", error);
+      }
+    } else {
+      currentUser = null;
+      userInfo.textContent = 'Not signed in';
+      signInBtn.style.display = 'inline';
+      signOutBtn.style.display = 'none';
+      // Hide all game sections
+      document.getElementById('displayNameSection').style.display = 'none';
+      document.getElementById('dragonSelection').style.display = 'none';
+      document.getElementById('explorationSection').style.display = 'none';
+      document.getElementById('hoardSection').style.display = 'none';
+      document.getElementById('pvpSection').style.display = 'none';
+    }
+  });
+
+  // --- Display Name ---
+
+  saveDisplayNameBtn.addEventListener('click', async () => {
+    const displayName = displayNameInput.value.trim();
+    if (!displayName || !currentUser) return;
+
+    try {
+      await db.collection('players').doc(currentUser.uid).set({
+        displayName: displayName
+      }, { merge: true });
+
+      alert("Display name saved!");
+      await loadPvPOpponents(currentUser.uid); // Refresh opponent list with new name
+    } catch (error) {
+      console.error("Error saving display name:", error);
+    }
+  });
+
+  // --- Dragon & Zone Loading ---
+
+  async function loadZones() {
+    console.log("Loading zones...");
+    zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
+    try {
+      const snapshot = await db.collection('zones').get();
+      snapshot.forEach(doc => {
+        const zone = doc.data();
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = zone.name;
+        zoneSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Failed to load zones:", error);
+    }
   }
-}
-
 
   async function loadPlayerDragon() {
-    const docSnap = await firebase.firestore().collection('players').doc(currentUser.uid).get();
+    const docSnap = await db.collection('players').doc(currentUser.uid).get();
     if (docSnap.exists) {
       const data = docSnap.data();
       dragonDropdown.value = data.dragonID || "";
     }
-
-      const confirmDragonBtn = document.getElementById('confirmDragon')
-    confirmDragonBtn.onclick = async () => {
-      const selectedDragon = dragonDropdown.value;
-      if (!selectedDragon) {
-        alert("Please choose a dragon!");
-        return;
-      }
-
-      await firebase.firestore().collection('players').doc(currentUser.uid).set({
-        dragonID: selectedDragon
-      }, { merge: true });
-
-      alert("Dragon selected: " + selectedDragon);
-      document.getElementById('explorationSection').style.display = 'block';
-    };
   }
 
-async function pvpChallenge() {
-  const opponentId = document.getElementById('pvpOpponentDropdown').value;
-  const resultBox = document.getElementById('pvpResultBox');
-
-  if (!opponentId) {
-    resultBox.textContent = "Please select an opponent first.";
-    return;
-  }
-
-  try {
-    // Get current player's hoardScore
-    const playerRef = db.collection("players").doc(currentUser.uid);
-    const playerSnap = await playerRef.get();
-    const playerData = playerSnap.data();
-    const playerScore = await getHoardScore(currentUser.uid);
-
-    // Get opponent's hoardScore
-    const opponentRef = db.collection("players").doc(opponentId);
-    const opponentSnap = await opponentRef.get();
-    const opponentData = opponentSnap.data();
-    const opponentScore = await getHoardScore(opponentId);
-
-    // Determine winner
-    const playerRoll = playerScore * Math.random();
-    const opponentRoll = opponentScore * Math.random();
-
-    let resultText = `
-      You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
-      ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
-      → `;
-
-    if (playerRoll > opponentRoll) {
-      resultText += "You win!";
-    } else if (playerRoll < opponentRoll) {
-      resultText += "You lose!";
-    } else {
-      resultText += "It's a tie!";
+  confirmDragonBtn.onclick = async () => {
+    const selectedDragon = dragonDropdown.value;
+    if (!selectedDragon) {
+      alert("Please choose a dragon!");
+      return;
     }
+    await db.collection('players').doc(currentUser.uid).set({
+      dragonID: selectedDragon
+    }, { merge: true });
+    alert("Dragon selected: " + selectedDragon);
+    await updateHoardDisplay(currentUser.uid); // Recalculate score with new dragon type
+  };
 
-    resultBox.textContent = resultText;
+  // --- Exploration & Combat ---
 
-  } catch (error) {
-    console.error("PvP challenge failed:", error);
-    resultBox.textContent = "An error occurred during PvP.";
-  }
-}
-
-
-document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
-
-  
   exploreBtn.onclick = async () => {
     const zoneId = zoneSelect.value;
     if (!zoneId) {
@@ -136,10 +154,9 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
       return;
     }
 
-    const booksRef = firebase.firestore().collection('adventureBooks').where('zoneId', '==', zoneId);
+    const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
     const snapshot = await booksRef.get();
     const books = [];
-
     snapshot.forEach(doc => {
       books.push({ id: doc.id, ...doc.data() });
     });
@@ -179,7 +196,8 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
   }
 
   async function resolveAdventureWithCombat(book, userId) {
-    const hoardScore = await getHoardScore(userId);
+    // This now uses the same score calculation as the display, including penalties.
+    const hoardScore = await updateHoardDisplay(userId);
     const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
     const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
     const resultBox = document.getElementById('combatResult');
@@ -192,33 +210,10 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
     }
   }
 
-  async function getHoardScore(userId) {
-    const playerRef = firebase.firestore().collection("players").doc(userId);
-    const playerSnap = await playerRef.get();
-    let score = 0;
-
-    if (playerSnap.exists) {
-      const hoardMap = playerSnap.data().hoard || {};
-      Object.values(hoardMap).forEach(treasure => {
-        const count = treasure.count || 1;
-        let rarityScore = 0;
-        switch ((treasure.rarity || '').toLowerCase()) {
-          case 'common': rarityScore = 1; break;
-          case 'uncommon': rarityScore = 3; break;
-          case 'heroic': rarityScore = 6; break;
-          case 'epic': rarityScore = 10; break;
-          case 'legendary': rarityScore = 20; break;
-          case 'mythic': rarityScore = 30; break;
-        }
-        score += rarityScore * count;
-      });
-    }
-
-    return score;
-  }
+  // --- Hoard & Treasure Management ---
 
   async function dropRandomTreasureAndAddToHoard(userId) {
-    const treasureSnapshot = await firebase.firestore().collection("treasures").get();
+    const treasureSnapshot = await db.collection("treasures").get();
     const allTreasures = [];
     treasureSnapshot.forEach(doc => {
       allTreasures.push({ id: doc.id, ...doc.data() });
@@ -231,398 +226,146 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 
     const randomIndex = Math.floor(Math.random() * allTreasures.length);
     const selectedTreasure = allTreasures[randomIndex];
-
     console.log("🎁 Dropped Treasure:", selectedTreasure.name || selectedTreasure.id);
 
     await addTreasureToHoard(userId, selectedTreasure);
-    await updateHoardDisplay(userId);
+    await updateHoardDisplay(userId); // Update score and display after getting treasure
   }
 
- async function addTreasureToHoard(userId, treasure) {
-  const playerRef = firebase.firestore().collection("players").doc(userId);
-  const playerSnap = await playerRef.get();
+  async function addTreasureToHoard(userId, treasure) {
+    const playerRef = db.collection("players").doc(userId);
+    const playerSnap = await playerRef.get();
+    if (!playerSnap.exists) return;
 
-  if (!playerSnap.exists) return;
-
-  const playerData = playerSnap.data();
-  const hoard = playerData.hoard || {};
-  const existing = hoard[treasure.id];
-
-  const updatedTreasure = {
-    ...treasure,
-    count: existing ? existing.count + 1 : 1
-  };
-
-  const hoardField = `hoard.${treasure.id}`;
-
-  // 🟩 Also update treasureIds if necessary
-  const treasureIds = playerData.treasureIds || [];
-  if (!treasureIds.includes(treasure.id)) {
-    treasureIds.push(treasure.id);
-  }
-
-  await playerRef.update({
-    [hoardField]: updatedTreasure,
-    treasureIds: treasureIds
-  });
-
-  console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
-}
-
-
-async function updateHoardDisplay(userId) {
-  const playerRef = firebase.firestore().collection("players").doc(userId);
-  const playerSnap = await playerRef.get();
-
-  hoardList.innerHTML = '';
-  let score = 0;
-
-  let selectedDragonId = null;
-  let preferredType = null;
-
-  if (playerSnap.exists) {
-    const playerData = playerSnap.data();
-    selectedDragonId = playerData.activeDragonId || ""; // ✅ use correct field
-    const hoardMap = playerData.hoard || {};
-
-    // 🔍 Fetch selected dragon's preferred treasure type
-    if (selectedDragonId) {
-      const dragonSnap = await firebase.firestore().collection("dragons").doc(selectedDragonId).get();
-      if (dragonSnap.exists) {
-        preferredType = (dragonSnap.data().type || "").toLowerCase(); // e.g., "reli"
-        console.log("Preferred type for dragon", selectedDragonId, "is:", preferredType);
-      } else {
-        console.warn("No dragon found for ID:", selectedDragonId);
-      }
-    }
-
-    Object.values(hoardMap).forEach(treasure => {
-      const count = treasure.count || 1;
-      const li = document.createElement('li');
-      li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
-      hoardList.appendChild(li);
-
-      // Debug logs to inspect scoring logic
-      console.log("Treasure:", treasure.name);
-      console.log("Treasure type:", treasure.type);
-      console.log("Preferred type:", preferredType);
-      console.log("Rarity:", treasure.rarity);
-
-      let rarityScore = 0;
-      switch ((treasure.rarity || '').toLowerCase()) {
-        case 'common': rarityScore = 1; break;
-        case 'uncommon': rarityScore = 3; break;
-        case 'heroic': rarityScore = 6; break;
-        case 'epic': rarityScore = 10; break;
-        case 'legendary': rarityScore = 20; break;
-        case 'mythic': rarityScore = 30; break;
-      }
-
-      const treasureType = (treasure.type || "").toLowerCase();
-      const isUniversal = treasureType === "univ";
-      const isPreferred = treasureType === preferredType;
-      const multiplier = isUniversal || isPreferred ? 1.0 : 0.5;
-
-      console.log("Applying multiplier:", multiplier);
-
-      score += rarityScore * multiplier * count;
-    });
-  }
-
-  hoardScoreSpan.textContent = score;
-
-  // 🔒 Try updating the backend, but don’t crash front-end if it fails
-  try {
-    await playerRef.update({ hoardScore: score });
-  } catch (e) {
-    console.warn("Failed to update hoardScore in Firestore:", e);
-  }
-}
-
-
-
-window.addEventListener("DOMContentLoaded", () => {
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-      currentUser = user;
-
-      // UI changes
-      userInfo.textContent = `Signed in as ${user.displayName || user.email}`;
-      signInBtn.style.display = 'none';
-      signOutBtn.style.display = 'inline';
-
-      try {
-        // Ensure Firestore player document exists
-        const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
-        const playerDoc = await playerRef.get();
-
-        if (!playerDoc.exists) {
-          await playerRef.set({
-            username: user.displayName || "New Player",
-            email: user.email || "",
-            hoardScore: 0,
-            activeDragonId: "starstorm001",
-            treasureIds: ["univ003"], // Magical Gum starter treasure
-            hoard: {
-              "univ003": {
-                count: 1,
-                name: "Magical Gum",
-                rarity: "heroic",
-                type: "univ"
-              }
-            },
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          alert("Welcome! You've been gifted Magical Gum to start your hoard!");
-        }
-
-        // load initial game data
-        await loadPlayerDragon();
-        await loadZones();
-        await loadPvPOpponents(currentUser.uid);
-        await updateHoardDisplay(currentUser.uid);
-        await loadIncomingTrades();
-        await loadAvailableTrades();
-
-      } catch (error) {
-        console.error("Error during sign-in logic:", error);
-      }
-
-    } else {
-      currentUser = null;
-      userInfo.textContent = "Not signed in";
-      signOutBtn.style.display = 'none';
-      signInBtn.style.display = 'inline';
-    }
-  });
-});
-
-
-// Save Display Name
-document.getElementById('saveDisplayNameBtn').addEventListener('click', async () => {
-  const input = document.getElementById('displayNameInput');
-  const newName = input.value.trim();
-
-  if (!newName || !currentUser) return;
-
-  const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
-  const playerDoc = await playerRef.get();
-
-  if (!playerDoc.exists) {
-    alert("Player record not found.");
-    return;
-  }
-
-  const currentName = playerDoc.data().displayName;
-
-  // Prevent changing after first set
-  if (currentName && currentName !== newName) {
-    alert("Display name cannot be changed once it is set.");
-    input.value = currentName;
-    return;
-  }
-
-  // Check if name is already taken by another user
-  const nameCheck = await firebase.firestore()
-    .collection("players")
-    .where("displayName", "==", newName)
-    .get();
-
-  const isTaken = nameCheck.docs.some(doc => doc.id !== currentUser.uid);
-
-  if (isTaken) {
-    alert("That display name is already taken. Please choose another.");
-    return;
-  }
-
-  try {
-    await playerRef.set({ displayName: newName }, { merge: true });
-    alert(`Display name set to "${newName}"!`);
-    await loadPvPOpponents(currentUser.uid); // ✅ fix: pass UID
-  } catch (error) {
-    console.error("Error saving display name:", error);
-    alert("Failed to save display name.");
-  }
-});
-
-async function proposeTrade() {
-  const proposerTreasureId = document.getElementById("proposeOwnTreasure").value;
-  const desiredTreasureId = document.getElementById("proposeDesiredTreasure").value;
-
-  if (!proposerTreasureId || !desiredTreasureId) {
-    alert("Please select both treasures.");
-    return;
-  }
-
-  try {
-    await firebase.firestore().collection("trades").add({
-      proposerId: currentUser.uid,
-      proposerTreasureId,
-      desiredTreasureId,
-      responderId: "",
-      status: "open",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    alert("Trade proposed successfully!");
-  } catch (error) {
-    console.error("Failed to propose trade:", error);
-    alert("There was an error creating the trade.");
-  }
-}
-
-async function loadTradeDropdowns() {
-  if (!currentUser || !currentUser.uid) {
-    console.warn("loadTradeDropdowns: currentUser is not set.");
-    return;
-  }
-
-  try {
-    const ownSelect = document.getElementById("proposeOwnTreasure");
-    const desiredSelect = document.getElementById("proposeDesiredTreasure");
-
-    console.log("ownSelect element:", ownSelect);
-    console.log("desiredSelect element:", desiredSelect);
-
-    if (!ownSelect || !desiredSelect) {
-      console.warn("One or both dropdown elements not found in the DOM.");
-      return;
-    }
-
-    // Clear old options
-    ownSelect.innerHTML = `<option value="">-- Choose --</option>`;
-    desiredSelect.innerHTML = `<option value="">-- Choose --</option>`;
-
-    // Fetch current user's hoard
-    const playerRef = db.collection("players").doc(currentUser.uid);
-    const playerDoc = await playerRef.get();
-
-    if (!playerDoc.exists) {
-      console.warn("No player document found for current user.");
-      return;
-    }
-
-    const playerData = playerDoc.data();
-    console.log("Fetched playerDoc:", playerData);
-
-    const treasureIds = playerData.treasureIds || [];
-    console.log("Player treasure IDs:", treasureIds);
-
-    for (const treasureId of treasureIds) {
-      console.log("Checking treasureId:", treasureId);
-      const treasureDoc = await db.collection("treasures").doc(treasureId).get();
-      if (treasureDoc.exists) {
-        const data = treasureDoc.data();
-        console.log("Treasure found:", data);
-        const label = `${data.name} — Rarity: ${data.rarity}`;
-        const option = document.createElement("option");
-        option.value = treasureId;
-        option.textContent = label;
-        ownSelect.appendChild(option);
-        console.log("✅ Added to ownSelect:", label);
-      } else {
-        console.warn("Treasure not found in Firestore:", treasureId);
-      }
-    }
-
-    // Fetch all treasures for desired list
-    const allTreasuresSnapshot = await db.collection("treasures").get();
-    allTreasuresSnapshot.forEach((doc) => {
-      const data = doc.data();
-      const label = `${data.name} — Rarity: ${data.rarity}`;
-      const option = document.createElement("option");
-      option.value = doc.id;
-      option.textContent = label;
-      desiredSelect.appendChild(option);
-    });
-
-    console.log("✅ Finished populating both dropdowns.");
-
-  } catch (error) {
-    console.error("Error loading trade dropdowns:", error);
-  }
-}
-
-
-document.getElementById("pvpChallengeBtn").onclick = async () => {
-  await pvpChallenge();
-};
-
-async function submitTradeProposal() {
-  const proposerId = currentUser.uid;
-  const proposerTreasureId = document.getElementById("proposeOwnTreasure").value;
-  const desiredTreasureId = document.getElementById("proposeDesiredTreasure").value;
-
-  if (!proposerTreasureId || !desiredTreasureId) {
-    alert("Please select both treasures to propose a trade.");
-    return;
-  }
-
-  try {
-    const tradeData = {
-      proposerId: proposerId,
-      proposerTreasureId: proposerTreasureId,
-      desiredTreasureId: desiredTreasureId,
-      status: "open",
-      acceptedBy: null,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    const hoard = playerSnap.data().hoard || {};
+    const existing = hoard[treasure.id];
+    const updatedTreasure = {
+      ...treasure,
+      count: existing ? existing.count + 1 : 1
     };
 
-    const tradeRef = await firebase.firestore().collection("trades").add(tradeData);
-
-    alert(`Trade proposed! ID: ${tradeRef.id}`);
-  } catch (error) {
-    console.error("Failed to submit trade proposal:", error);
-    alert("Something went wrong submitting the trade.");
-  }
-}
-
-async function loadAvailableTrades() {
-  const tradeSelect = document.getElementById("availableTrades");
-  tradeSelect.innerHTML = `<option value="">-- Choose a Trade --</option>`;
-
-  try {
-    const snapshot = await firebase.firestore().collection("trades")
-      .where("status", "==", "open")
-      .get();
-
-    snapshot.forEach(doc => {
-      const trade = doc.data();
-
-      // Skip trades proposed by current user
-      if (trade.proposerId === currentUser.uid) return;
-
-      const option = document.createElement("option");
-      option.value = doc.id;
-      option.textContent = `${trade.proposerId} offers ${trade.proposerTreasureId} for ${trade.desiredTreasureId}`;
-      tradeSelect.appendChild(option);
+    const hoardField = `hoard.${treasure.id}`;
+    await playerRef.update({
+      [hoardField]: updatedTreasure
     });
-  } catch (error) {
-    console.error("Error loading available trades:", error);
+    console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
   }
-}
 
-async function loadOpenTradesDropdown() {
-  const dropdown = document.getElementById("openTradesDropdown");
-  dropdown.innerHTML = `<option value="">-- Choose a Trade --</option>`;
+  async function updateHoardDisplay(userId) {
+    const playerRef = db.collection("players").doc(userId);
+    const playerSnap = await playerRef.get();
 
-  try {
-    const snapshot = await db.collection("trades")
-      .where("status", "==", "open")
-      .get();
+    hoardList.innerHTML = '';
+    let score = 0;
+    let preferredType = null;
 
-    snapshot.forEach(doc => {
-      const trade = doc.data();
-      if (trade.proposerId !== currentUser.uid) {
-        const option = document.createElement("option");
-        option.value = doc.id;
-        option.textContent = `User ${trade.proposerId} offers ${trade.proposerTreasureId} for ${trade.desiredTreasureId}`;
-        dropdown.appendChild(option);
+    if (playerSnap.exists) {
+      const playerData = playerSnap.data();
+      const selectedDragonId = playerData.dragonID || "";
+      const hoardMap = playerData.hoard || {};
+
+      if (selectedDragonId) {
+        const dragonSnap = await db.collection("dragons").doc(selectedDragonId).get();
+        if (dragonSnap.exists) {
+          preferredType = (dragonSnap.data().type || "").toLowerCase();
+        }
       }
-    });
-  } catch (error) {
-    console.error("Error loading open trades:", error);
+
+      for (const treasure of Object.values(hoardMap)) {
+        const count = treasure.count || 1;
+        const li = document.createElement('li');
+        li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
+        hoardList.appendChild(li);
+
+        let rarityScore = 0;
+        switch ((treasure.rarity || '').toLowerCase()) {
+          case 'common': rarityScore = 1; break;
+          case 'uncommon': rarityScore = 3; break;
+          case 'heroic': rarityScore = 6; break;
+          case 'epic': rarityScore = 10; break;
+          case 'legendary': rarityScore = 20; break;
+          case 'mythic': rarityScore = 30; break;
+        }
+
+        const treasureType = (treasure.type || "").toLowerCase();
+        const isUniversal = treasureType === "univ";
+        const isPreferred = treasureType === preferredType;
+        const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
+
+        score += rarityScore * multiplier * count;
+      }
+    }
+
+    hoardScoreSpan.textContent = Math.round(score); // Round score to avoid decimals
+    db.collection('players').doc(userId).update({ hoardScore: Math.round(score) }); // Also save score to player doc
+    return score;
   }
-}
 
+  // --- PvP ---
 
+  async function loadPvPOpponents(currentUserId) {
+    pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
+    try {
+      const snapshot = await db.collection('players').get();
+      snapshot.forEach(doc => {
+        if (doc.id !== currentUserId) {
+          const playerData = doc.data();
+          const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
+          const option = document.createElement('option');
+          option.value = doc.id;
+          option.textContent = displayName;
+          pvpDropdown.appendChild(option);
+        }
+      });
+    } catch (error) {
+      console.error("Error loading PvP opponents:", error);
+    }
+  }
+
+  async function pvpChallenge() {
+    const opponentId = pvpDropdown.value;
+    if (!opponentId) {
+      pvpResultBox.textContent = "Please select an opponent first.";
+      return;
+    }
+
+    try {
+      // Get current player's data
+      const playerRef = db.collection("players").doc(currentUser.uid);
+      const playerSnap = await playerRef.get();
+      const playerData = playerSnap.data();
+      const playerScore = playerData.hoardScore || 0;
+
+      // Get opponent's data
+      const opponentRef = db.collection("players").doc(opponentId);
+      const opponentSnap = await opponentRef.get();
+      const opponentData = opponentSnap.data();
+      const opponentScore = opponentData.hoardScore || 0;
+
+      // Determine winner
+      const playerRoll = playerScore * Math.random();
+      const opponentRoll = opponentScore * Math.random();
+
+      let resultText = `
+        You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
+        ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
+        → `;
+
+      if (playerRoll > opponentRoll) {
+        resultText += "You win!";
+      } else if (playerRoll < opponentRoll) {
+        resultText += "You lose!";
+      } else {
+        resultText += "It's a tie!";
+      }
+      pvpResultBox.textContent = resultText;
+
+    } catch (error) {
+      console.error("PvP challenge failed:", error);
+      pvpResultBox.textContent = "An error occurred during PvP.";
+    }
+  }
+
+  pvpChallengeBtn.onclick = pvpChallenge;
+
+});
