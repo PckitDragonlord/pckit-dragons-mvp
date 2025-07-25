@@ -396,7 +396,9 @@ firebase.auth().onAuthStateChanged(async (user) => {
       await populateTradeDropdowns();         // Populate trade dropdowns
       await updateHoardDisplay(user.uid);     // Show hoard in DOM
       loadPlayerDragon();                     // Hook up dragon select dropdown
+      await populateAvailableTrades();
 
+     
     } catch (error) {
       console.error("Error during sign-in logic:", error);
     }
