@@ -384,13 +384,13 @@ window.addEventListener("DOMContentLoaded", () => {
           alert("Welcome! You've been gifted Magical Gum to start your hoard!");
         }
 
-        // Populate initial game data
+        // load initial game data
         await loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(currentUser.uid);
         await updateHoardDisplay();
         await loadIncomingTrades();
-        await populateAvailableTrades();
+        await loadAvailableTrades();
 
       } catch (error) {
         console.error("Error during sign-in logic:", error);
@@ -479,9 +479,9 @@ async function proposeTrade() {
   }
 }
 
-async function populateTradeDropdowns() {
+async function loadTradeDropdowns() {
   if (!currentUser || !currentUser.uid) {
-    console.warn("populateTradeDropdowns: currentUser is not set.");
+    console.warn("loadTradeDropdowns: currentUser is not set.");
     return;
   }
 
@@ -585,7 +585,7 @@ async function submitTradeProposal() {
   }
 }
 
-async function populateAvailableTrades() {
+async function loadAvailableTrades() {
   const tradeSelect = document.getElementById("availableTrades");
   tradeSelect.innerHTML = `<option value="">-- Choose a Trade --</option>`;
 
@@ -610,7 +610,7 @@ async function populateAvailableTrades() {
   }
 }
 
-async function populateOpenTradesDropdown() {
+async function loadOpenTradesDropdown() {
   const dropdown = document.getElementById("openTradesDropdown");
   dropdown.innerHTML = `<option value="">-- Choose a Trade --</option>`;
 
@@ -632,3 +632,5 @@ async function populateOpenTradesDropdown() {
     console.error("Error loading open trades:", error);
   }
 }
+
+
