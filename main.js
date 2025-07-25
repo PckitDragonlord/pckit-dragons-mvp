@@ -438,8 +438,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert("Welcome! You've been gifted Magical Gum to start your hoard!");
-      }
+    
 
       // Pre-fill display name if set
       const updatedPlayerDoc = await playerRef.get();
