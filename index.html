@@ -7,109 +7,40 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
-  <h1>Welcome to P'ckit Dragons</h1>
-
-  <!-- Dragon selection dropdown (shown only if player has no dragon yet) -->
-  <div id="dragonSelection">
-    <h3>Choose Your Dragon</h3>
-    <select id="dragonDropdown">
-      <option value="">-- Select a Dragon --</option>
-      <option value="spitfire001">Spitfire (Tech)</option>
-      <option value="starstorm001">Starstorm (Relic)</option>
-      <option value="smerd001">Smerd (Junk Food)</option>
-      <option value="roxxie001">Roxxie (Maps)</option>
-      <option value="melody001">Melody (Music)</option>
-      <option value="icicle001">Icicle (Memory)</option>
-    </select>
-    <button id="confirmDragon">Confirm</button>
-  </div>
-<div id="displayNameSection">
-  <label for="displayNameInput">Set Display Name:</label>
-  <input type="text" id="displayNameInput" placeholder="e.g. FlameLord42">
-  <button id="saveDisplayNameBtn">Save</button>
-</div>
-
-  <!-- Auth section -->
-  <div>
-    <button id="signInBtn">Sign in with Google</button>
-    <button id="signOutBtn" style="display:none;">Sign Out</button>
-    <p id="userInfo">Not signed in</p>
-  </div>
-
-  <!-- Exploration section -->
-  <div id="explorationSection" style="margin-top: 20px;">
-    <label for="zoneSelect">Choose a Zone:</label>
-    <select id="zoneSelect">
-      <option value="">-- Select a Zone --</option>
-    </select>
-    <button id="exploreBtn">Explore</button>
-  </div>
-
-  <!-- Book display area -->
-  <div id="bookList"></div>
-  <div id="discoveryBox" class="book-discovery"></div>
-
-<div id="hoardSection" style="margin-top: 20px;">
-  <h2>Your Hoard</h2>
-  <ul id="hoardList"></ul>
-  <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
-</div>
-
- <div id="pvpSection" style="display: block;">
-  <h3>Challenge Another Dragon</h3>
-  <select id="pvpOpponentDropdown"><option value="">-- Select Opponent --</option></select>
-  <button id="pvpChallengeBtn">Challenge!</button>
-  <p id="pvpResultBox"></p>
-</div>
-
-<div id="tradeSection" style="margin-top: 20px; display: none;">
-  <h2>Trade Treasures</h2>
-  
-  <div id="createTrade" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
-    <h3>Propose a New Trade</h3>
+  <div class="game-dashboard">
     
-    <div>
-      <label for="tradePartnerSelect">Trade with:</label>
-      <select id="tradePartnerSelect">
-        <option value="">-- Select a Player --</option>
-      </select>
-      <button id="loadPlayerHoardsBtn">View Hoards</button>
-    </div>
-
-    <div id="tradeOfferCreation" style="display: none; margin-top: 10px;">
-      <p><strong>You Offer:</strong></p>
-      <select id="offerItemSelect"></select>
+    <div id="playerHub" class="dashboard-column">
+      <h2>Your Lair</h2>
       
-      <p style="margin-top: 10px;"><strong>You Request:</strong></p>
-      <select id="requestItemSelect"></select>
-
-      <button id="proposeTradeBtn" style="margin-top: 15px;">Propose Trade</button>
-      <p id="tradeProposalResult"></p>
+      <div id="dragonDisplay"></div>
+      
+      <div id="playerInfo"></div>
+      
+      <div id="hoardDisplay"></div>
     </div>
-  </div>
+    
+    <div id="activityPanel" class="dashboard-column">
+      <h1>P'ckit Dragons</h1>
 
-  <div id="viewTrades">
-    <h3>Your Trade Offers</h3>
+      <div id="tabNav"></div>
+
+      <div id="tabContent"></div>
+      
+    </div>
     
-    <h4>Incoming Offers (From other players)</h4>
-    <ul id="incomingOffersList">
-      </ul>
+    <div id="socialPanel" class="dashboard-column">
+      <h2>World Events</h2>
+      
+      <div id="leaderboard"></div>
+
+      <div id="eventLog"></div>
+    </div>
     
-    <h4>Outgoing Offers (Sent by you)</h4>
-    <ul id="outgoingOffersList">
-      </ul>
-  </div>
-</div>
-  
-  <!-- Firebase SDKs (v8.x) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  </div> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-  <!-- Firebase config and main game logic -->
   <script src="./firebase.js"></script>
   <script src="./main.js"></script>
-
 </body>
 </html>
 
