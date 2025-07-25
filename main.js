@@ -2,7 +2,8 @@ let currentUser = null;
 
 // main.js (no firebaseConfig or init here — all in firebase.js)
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
   const userInfo = document.getElementById('userInfo');
