@@ -407,48 +407,50 @@ firebase.auth().onAuthStateChanged(async (user) => {
 
 // Save Display Name
 document.getElementById('saveDisplayNameBtn').addEventListener('click', async () => {
-  const displayName = document.getElementById('displayNameInput').value.trim();
-  if (!displayName || !currentUser) return;
+  const input = document.getElementById('displayNameInput');
+  const newName = input.value.trim();
+
+  if (!newName || !currentUser) return;
+
+  const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
+  const playerDoc = await playerRef.get();
+
+  if (!playerDoc.exists) {
+    alert("Player record not found.");
+    return;
+  }
+
+  const currentName = playerDoc.data().displayName;
+
+  // Prevent changing after first set
+  if (currentName && currentName !== newName) {
+    alert("Display name cannot be changed once it is set.");
+    input.value = currentName;
+    return;
+  }
+
+  // Check if name is already taken by another user
+  const nameCheck = await firebase.firestore()
+    .collection("players")
+    .where("displayName", "==", newName)
+    .get();
+
+  const isTaken = nameCheck.docs.some(doc => doc.id !== currentUser.uid);
+
+  if (isTaken) {
+    alert("That display name is already taken. Please choose another.");
+    return;
+  }
 
   try {
-  await firebase.firestore().collection('players').doc(currentUser.uid).set({
-  displayName: displayName
-}, { merge: true });
-
-
-    alert("Display name saved!");
-    loadPvPOpponents(); // refresh the dropdown after saving
+    await playerRef.set({ displayName: newName }, { merge: true });
+    alert(`Display name set to "${newName}"!`);
+    await loadPvPOpponents(currentUser.uid); // ✅ fix: pass UID
   } catch (error) {
     console.error("Error saving display name:", error);
+    alert("Failed to save display name.");
   }
 });
-
-  
-});
-
-async function loadOpponentOptions() {
-  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
-  pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
-
-  try {
-    const snapshot = await firebase.firestore().collection('players').get();
-
-    snapshot.forEach(doc => {
-      if (doc.id !== currentUser.uid) {  // ✅ Skip current player
-        const playerData = doc.data();
-        const displayName = playerData.displayName || `Player (${doc.id})`;
-
-        const option = document.createElement('option');
-        option.value = doc.id;
-        option.textContent = displayName;
-        pvpDropdown.appendChild(option);
-      }
-    });
-
-  } catch (error) {
-    console.error("Error loading opponents:", error);
-  }
-}
 
 async function proposeTrade() {
   const proposerTreasureId = document.getElementById("proposeOwnTreasure").value;
