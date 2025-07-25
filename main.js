@@ -397,6 +397,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
       await updateHoardDisplay(user.uid);     // Show hoard in DOM
       loadPlayerDragon();                     // Hook up dragon select dropdown
       await populateAvailableTrades();
+      await populateOpenTradesDropdown();
 
      
     } catch (error) {
