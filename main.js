@@ -29,8 +29,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     firebase.auth().signOut();
   };
 
-  // ✅ Correct: this stays here
-  alert("Welcome! You've been gifted Magical Gum to start your hoard!");
+  
 
   // ✅ All remaining logic (e.g., onAuthStateChanged) continues here
 });
@@ -380,6 +379,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
           },
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+       alert("Welcome! You've been gifted Magical Gum to start your hoard!");
       }
     
 
