@@ -387,7 +387,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // Populate initial game data
         await loadPlayerDragon();
         await loadZones();
-        await populateOpponentDropdown(user.uid);
+        await loadPvPOpponents(currentUser.uid);
         await populateHoard();
         await populateIncomingTrades();
         await populateAvailableTrades();
