@@ -1,6 +1,9 @@
-// main.js
+// main.js - MVP Mechanics Complete
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Constants
+  const MINIMUM_HOARD_SCORE = 5;
+
   // Element References
   const signInBtn = document.getElementById('signInBtn');
   const signOutBtn = document.getElementById('signOutBtn');
@@ -31,6 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   let currentUser = null;
   let currentBook = null;
+  let tradeListeners = []; // To hold our listeners so we can detach them on logout
 
   // --- Authentication ---
 
@@ -40,6 +44,9 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   signOutBtn.onclick = () => {
+    // Detach all realtime listeners to prevent memory leaks after logout
+    tradeListeners.forEach(unsubscribe => unsubscribe());
+    tradeListeners = [];
     firebase.auth().signOut();
   };
 
@@ -56,7 +63,7 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('explorationSection').style.display = 'block';
         document.getElementById('hoardSection').style.display = 'block';
         document.getElementById('pvpSection').style.display = 'block';
-        document.getElementById('tradeSection').style.display = 'block'; // Show trading
+        document.getElementById('tradeSection').style.display = 'block';
 
         const playerRef = db.collection("players").doc(currentUser.uid);
         const playerDoc = await playerRef.get();
@@ -95,6 +102,9 @@ window.addEventListener('DOMContentLoaded', () => {
             activeDragonId: null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
+
+          // --- NEW: Welcome alert for first-time players ---
+          alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
         }
 
         const updatedPlayerDoc = await playerRef.get();
@@ -106,8 +116,8 @@ window.addEventListener('DOMContentLoaded', () => {
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
-        await loadTradePartners(user.uid); // Load partners for trade dropdown
-        listenForTradeOffers(user.uid); // Start listening for trades
+        await loadTradePartners(user.uid);
+        listenForTradeOffers(user.uid);
         await updateHoardDisplay(user.uid);
 
       } catch (error) {
@@ -124,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('explorationSection').style.display = 'none';
       document.getElementById('hoardSection').style.display = 'none';
       document.getElementById('pvpSection').style.display = 'none';
-      document.getElementById('tradeSection').style.display = 'none'; // Hide trading
+      document.getElementById('tradeSection').style.display = 'none';
     }
   });
 
@@ -132,7 +142,6 @@ window.addEventListener('DOMContentLoaded', () => {
   saveDisplayNameBtn.addEventListener('click', async () => {
     const displayName = displayNameInput.value.trim();
     if (!displayName || !currentUser) return;
-
     try {
       await db.collection('players').doc(currentUser.uid).set({ displayName: displayName }, { merge: true });
       alert("Display name saved!");
@@ -145,16 +154,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Dragon & Zone Loading ---
   async function loadZones() {
-    console.log("Loading zones...");
     zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
     try {
       const snapshot = await db.collection('zones').get();
       snapshot.forEach(doc => {
         const zone = doc.data();
-        const option = document.createElement('option');
-        option.value = doc.id;
-        option.textContent = zone.name;
-        zoneSelect.appendChild(option);
+        zoneSelect.add(new Option(zone.name, doc.id));
       });
     } catch (error) {
       console.error("Failed to load zones:", error);
@@ -163,9 +168,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function loadPlayerDragon() {
     const docSnap = await db.collection('players').doc(currentUser.uid).get();
-    if (docSnap.exists) {
-      dragonDropdown.value = docSnap.data().dragonID || "";
-    }
+    if (docSnap.exists) dragonDropdown.value = docSnap.data().dragonID || "";
   }
 
   confirmDragonBtn.onclick = async () => {
@@ -186,7 +189,6 @@ window.addEventListener('DOMContentLoaded', () => {
       alert('Please select a zone first!');
       return;
     }
-
     const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
     const snapshot = await booksRef.get();
     const books = [];
@@ -196,21 +198,11 @@ window.addEventListener('DOMContentLoaded', () => {
       discoveryBox.innerHTML = `<p>No adventure books available in this zone.</p>`;
       return;
     }
-
     const randomIndex = Math.floor(Math.random() * books.length);
     currentBook = books[randomIndex];
 
     discoveryBox.innerHTML = `
-      <div class="book-card">
-        <h3>${currentBook.title}</h3>
-        <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
-        <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
-        <div class="book-cover-placeholder"></div>
-        <button id="resolveBtn">Resolve Adventure</button>
-        <p id="combatResult"></p>
-      </div>
-    `;
-
+      <div class="book-card"><h3>${currentBook.title}</h3><p><strong>Rarity:</strong> ${currentBook.rarity}</p><p><strong>Difficulty:</strong> ${currentBook.difficulty}</p><div class="book-cover-placeholder"></div><button id="resolveBtn">Resolve Adventure</button><p id="combatResult"></p></div>`;
     document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
   };
 
@@ -229,7 +221,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
     const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
     const resultBox = document.getElementById('combatResult');
-
     if (playerRoll >= enemyRoll) {
       resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
       await dropRandomTreasureAndAddToHoard(userId);
@@ -243,34 +234,21 @@ window.addEventListener('DOMContentLoaded', () => {
     const treasureSnapshot = await db.collection("treasures").get();
     const allTreasures = [];
     treasureSnapshot.forEach(doc => allTreasures.push({ id: doc.id, ...doc.data() }));
-
     if (allTreasures.length === 0) return;
-
     const randomIndex = Math.floor(Math.random() * allTreasures.length);
-    const selectedTreasure = allTreasures[randomIndex];
-    console.log("🎁 Dropped Treasure:", selectedTreasure.name || selectedTreasure.id);
-
-    await addTreasureToHoard(userId, selectedTreasure.id);
+    await addTreasureToHoard(userId, allTreasures[randomIndex].id);
   }
 
   async function addTreasureToHoard(userId, treasureId) {
     const playerRef = db.collection("players").doc(userId);
     const treasureRef = db.collection("treasures").doc(treasureId);
-    
     const [playerSnap, treasureSnap] = await Promise.all([playerRef.get(), treasureRef.get()]);
-
-    if (!playerSnap.exists || !treasureSnap.exists) {
-        console.error("Player or Treasure not found for adding to hoard.");
-        return;
-    }
+    if (!playerSnap.exists || !treasureSnap.exists) return;
     const treasure = { id: treasureSnap.id, ...treasureSnap.data() };
     const hoard = playerSnap.data().hoard || {};
     const existing = hoard[treasure.id];
-
     const updatedTreasure = { ...treasure, count: existing ? existing.count + 1 : 1 };
     await playerRef.update({ [`hoard.${treasure.id}`]: updatedTreasure });
-
-    console.log(`Added ${treasure.name} to hoard (x${updatedTreasure.count})`);
     await updateHoardDisplay(userId);
   }
 
@@ -278,12 +256,10 @@ window.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     const hoardMap = playerData.hoard || {};
     let preferredType = null;
-
     if (playerData.dragonID) {
       const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
       if (dragonSnap.exists) preferredType = (dragonSnap.data().type || "").toLowerCase();
     }
-
     for (const treasure of Object.values(hoardMap)) {
       const count = treasure.count || 1;
       let rarityScore = 0;
@@ -311,13 +287,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const playerData = playerSnap.data();
       const score = await calculateHoardScore(playerData);
       const hoardMap = playerData.hoard || {};
-
       Object.values(hoardMap).forEach(treasure => {
           const li = document.createElement('li');
           li.textContent = `${treasure.name} (x${treasure.count || 1}) — Rarity: ${treasure.rarity}`;
           hoardList.appendChild(li);
       });
-
       hoardScoreSpan.textContent = score;
       db.collection('players').doc(userId).update({ hoardScore: score });
       return score;
@@ -328,21 +302,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // --- PvP ---
   async function loadPvPOpponents(currentUserId) {
     pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
-    try {
-      const snapshot = await db.collection('players').get();
-      snapshot.forEach(doc => {
-        if (doc.id !== currentUserId) {
-          const playerData = doc.data();
-          const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
-          const option = document.createElement('option');
-          option.value = doc.id;
-          option.textContent = displayName;
-          pvpDropdown.appendChild(option);
-        }
-      });
-    } catch (error) {
-      console.error("Error loading PvP opponents:", error);
-    }
+    const snapshot = await db.collection('players').get();
+    snapshot.forEach(doc => {
+      if (doc.id !== currentUserId) {
+        const playerData = doc.data();
+        pvpDropdown.add(new Option(playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
+      }
+    });
   }
   
   pvpChallengeBtn.onclick = async () => {
@@ -351,24 +317,16 @@ window.addEventListener('DOMContentLoaded', () => {
       pvpResultBox.textContent = "Please select an opponent first.";
       return;
     }
-
     pvpChallengeBtn.disabled = true;
     pvpResultBox.textContent = "Challenging...";
-
     try {
       const playerSnap = await db.collection("players").doc(currentUser.uid).get();
-      const playerData = playerSnap.data();
-      const playerScore = await calculateHoardScore(playerData);
-
+      const playerScore = await calculateHoardScore(playerSnap.data());
       const opponentSnap = await db.collection("players").doc(opponentId).get();
-      const opponentData = opponentSnap.data();
-      const opponentScore = await calculateHoardScore(opponentData);
-
+      const opponentScore = await calculateHoardScore(opponentSnap.data());
       const playerRoll = Math.floor(Math.random() * 100) + playerScore;
       const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
-
-      let resultText = `You (${playerData.displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
-
+      let resultText = `You (${playerSnap.data().displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentSnap.data().displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
       if (playerRoll > opponentRoll) {
         resultText += "You win! 🎉 You found a new treasure!";
         await dropRandomTreasureAndAddToHoard(currentUser.uid);
@@ -392,9 +350,7 @@ window.addEventListener('DOMContentLoaded', () => {
     snapshot.forEach(doc => {
       if (doc.id !== currentUserId) {
         const playerData = doc.data();
-        const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
-        const option = new Option(displayName, doc.id);
-        tradePartnerSelect.appendChild(option);
+        tradePartnerSelect.add(new Option(playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
       }
     });
   }
@@ -405,27 +361,13 @@ window.addEventListener('DOMContentLoaded', () => {
         alert("Please select a player to trade with.");
         return;
     }
-    
-    const [mySnap, partnerSnap] = await Promise.all([
-        db.collection('players').doc(currentUser.uid).get(),
-        db.collection('players').doc(partnerId).get()
-    ]);
-
+    const [mySnap, partnerSnap] = await Promise.all([db.collection('players').doc(currentUser.uid).get(), db.collection('players').doc(partnerId).get()]);
     const myHoard = mySnap.data().hoard || {};
     const partnerHoard = partnerSnap.data().hoard || {};
-
-    // Populate "You Offer" dropdown
     offerItemSelect.innerHTML = `<option value="">-- Select Your Item --</option>`;
-    for (const [id, item] of Object.entries(myHoard)) {
-        offerItemSelect.add(new Option(`${item.name} (x${item.count})`, id));
-    }
-    
-    // Populate "You Request" dropdown
+    for (const [id, item] of Object.entries(myHoard)) offerItemSelect.add(new Option(`${item.name} (x${item.count})`, id));
     requestItemSelect.innerHTML = `<option value="">-- Select Their Item --</option>`;
-    for (const [id, item] of Object.entries(partnerHoard)) {
-        requestItemSelect.add(new Option(`${item.name} (x${item.count})`, id));
-    }
-
+    for (const [id, item] of Object.entries(partnerHoard)) requestItemSelect.add(new Option(`${item.name} (x${item.count})`, id));
     tradeOfferCreation.style.display = 'block';
   };
   
@@ -433,15 +375,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const partnerId = tradePartnerSelect.value;
     const offeredTreasureId = offerItemSelect.value;
     const requestedTreasureId = requestItemSelect.value;
-
     if (!partnerId || !offeredTreasureId || !requestedTreasureId) {
         tradeProposalResult.textContent = "Please select a partner and both items.";
         return;
     }
-    
     proposeTradeBtn.disabled = true;
     tradeProposalResult.textContent = "Proposing...";
-    
     try {
       await db.collection("trades").add({
         offeringPlayerId: currentUser.uid,
@@ -462,43 +401,35 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   function listenForTradeOffers(userId) {
-    // Listen for trades offered TO me
-    db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending')
-      .onSnapshot(snapshot => {
+    const incomingQuery = db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending');
+    const outgoingQuery = db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending');
+    
+    const unsubIncoming = incomingQuery.onSnapshot(snapshot => {
         incomingOffersList.innerHTML = '';
         snapshot.forEach(doc => {
           const trade = { id: doc.id, ...doc.data() };
           const li = document.createElement('li');
-          li.innerHTML = `
-            <span>${trade.offeringPlayerName} wants to trade their <strong>${trade.offeredTreasureId}</strong> for your <strong>${trade.requestedTreasureId}</strong>.</span>
-            <button class="accept-trade" data-id="${trade.id}">Accept</button>
-            <button class="reject-trade" data-id="${trade.id}">Reject</button>
-          `;
+          li.innerHTML = `<span>${trade.offeringPlayerName} wants <strong>${trade.requestedTreasureId}</strong> for their <strong>${trade.offeredTreasureId}</strong>.</span> <button class="accept-trade" data-id="${trade.id}">Accept</button><button class="reject-trade" data-id="${trade.id}">Reject</button>`;
           incomingOffersList.appendChild(li);
         });
       });
-
-    // Listen for trades offered BY me
-    db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending')
-      .onSnapshot(snapshot => {
+    
+    const unsubOutgoing = outgoingQuery.onSnapshot(snapshot => {
         outgoingOffersList.innerHTML = '';
         snapshot.forEach(doc => {
           const trade = { id: doc.id, ...doc.data() };
           const li = document.createElement('li');
-          li.innerHTML = `
-            <span>You offered <strong>${trade.offeredTreasureId}</strong> for <strong>${trade.requestedTreasureId}</strong>.</span>
-            <button class="cancel-trade" data-id="${trade.id}">Cancel</button>
-          `;
+          li.innerHTML = `<span>You offered <strong>${trade.offeredTreasureId}</strong> for <strong>${trade.requestedTreasureId}</strong>.</span> <button class="cancel-trade" data-id="${trade.id}">Cancel</button>`;
           outgoingOffersList.appendChild(li);
         });
       });
+      
+    tradeListeners.push(unsubIncoming, unsubOutgoing);
   }
   
-  // Event delegation for trade buttons
   document.body.addEventListener('click', async (e) => {
     const tradeId = e.target.getAttribute('data-id');
     if (!tradeId) return;
-
     if (e.target.matches('.accept-trade')) acceptTrade(tradeId);
     if (e.target.matches('.reject-trade')) db.collection('trades').doc(tradeId).update({ status: 'rejected' });
     if (e.target.matches('.cancel-trade')) db.collection('trades').doc(tradeId).update({ status: 'cancelled' });
@@ -506,64 +437,39 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function acceptTrade(tradeId) {
     const tradeRef = db.collection('trades').doc(tradeId);
-
     try {
       await db.runTransaction(async (transaction) => {
         const tradeDoc = await transaction.get(tradeRef);
-        if (!tradeDoc.exists || tradeDoc.data().status !== 'pending') {
-          throw new Error("Trade is no longer available.");
-        }
-
+        if (!tradeDoc.exists || tradeDoc.data().status !== 'pending') throw new Error("Trade is no longer available.");
         const tradeData = tradeDoc.data();
         const offeringPlayerRef = db.collection('players').doc(tradeData.offeringPlayerId);
         const targetPlayerRef = db.collection('players').doc(tradeData.targetPlayerId);
-        
-        const [offeringPlayerDoc, targetPlayerDoc] = await Promise.all([
-            transaction.get(offeringPlayerRef),
-            transaction.get(targetPlayerRef)
-        ]);
-
+        const [offeringPlayerDoc, targetPlayerDoc] = await Promise.all([transaction.get(offeringPlayerRef), transaction.get(targetPlayerRef)]);
         if (!offeringPlayerDoc.exists || !targetPlayerDoc.exists) throw new Error("A player in the trade does not exist.");
-
-        const offeringHoard = offeringPlayerDoc.data().hoard || {};
-        const targetHoard = targetPlayerDoc.data().hoard || {};
-
-        const offeredItem = offeringHoard[tradeData.offeredTreasureId];
-        const requestedItem = targetHoard[tradeData.requestedTreasureId];
         
+        const offeringPlayerData = offeringPlayerDoc.data();
+        const targetPlayerData = targetPlayerDoc.data();
+        const offeredItem = offeringPlayerData.hoard[tradeData.offeredTreasureId];
+        const requestedItem = targetPlayerData.hoard[tradeData.requestedTreasureId];
         if (!offeredItem || !requestedItem) throw new Error("A player is missing the required trade item.");
+        
+        const offeringPlayerInitialScore = await calculateHoardScore(offeringPlayerData);
+        const targetPlayerInitialScore = await calculateHoardScore(targetPlayerData);
+        const offeredItemValue = (await calculateHoardScore({ hoard: { [offeredItem.id]: { ...offeredItem, count: 1 } }, dragonID: offeringPlayerData.dragonID }));
+        const requestedItemValue = (await calculateHoardScore({ hoard: { [requestedItem.id]: { ...requestedItem, count: 1 } }, dragonID: targetPlayerData.dragonID }));
 
-        // Decrement/remove offered item from offering player
-        if (offeredItem.count > 1) {
-          transaction.update(offeringPlayerRef, { [`hoard.${tradeData.offeredTreasureId}.count`]: offeredItem.count - 1 });
-        } else {
-          transaction.update(offeringPlayerRef, { [`hoard.${tradeData.offeredTreasureId}`]: firebase.firestore.FieldValue.delete() });
-        }
+        if ((offeringPlayerInitialScore - offeredItemValue + requestedItemValue) < MINIMUM_HOARD_SCORE) throw new Error(`This trade would leave ${offeringPlayerData.displayName} with a hoard score that is too low.`);
+        if ((targetPlayerInitialScore - requestedItemValue + offeredItemValue) < MINIMUM_HOARD_SCORE) throw new Error(`This trade would leave your hoard score too low to progress.`);
 
-        // Decrement/remove requested item from target player
-        if (requestedItem.count > 1) {
-          transaction.update(targetPlayerRef, { [`hoard.${tradeData.requestedTreasureId}.count`]: requestedItem.count - 1 });
-        } else {
-          transaction.update(targetPlayerRef, { [`hoard.${tradeData.requestedTreasureId}`]: firebase.firestore.FieldValue.delete() });
-        }
-
-        // Add items to new owners
-        const offeredItemInTargetHoard = targetHoard[tradeData.offeredTreasureId];
-        const requestedItemInOfferingHoard = offeringHoard[tradeData.requestedTreasureId];
-
-        transaction.update(targetPlayerRef, {
-            [`hoard.${tradeData.offeredTreasureId}`]: { ...offeredItem, count: (offeredItemInTargetHoard?.count || 0) + 1 }
-        });
-        transaction.update(offeringPlayerRef, {
-            [`hoard.${tradeData.requestedTreasureId}`]: { ...requestedItem, count: (requestedItemInOfferingHoard?.count || 0) + 1 }
-        });
-
-        // Mark trade as accepted
+        if (offeredItem.count > 1) transaction.update(offeringPlayerRef, { [`hoard.${tradeData.offeredTreasureId}.count`]: offeredItem.count - 1 });
+        else transaction.update(offeringPlayerRef, { [`hoard.${tradeData.offeredTreasureId}`]: firebase.firestore.FieldValue.delete() });
+        if (requestedItem.count > 1) transaction.update(targetPlayerRef, { [`hoard.${tradeData.requestedTreasureId}.count`]: requestedItem.count - 1 });
+        else transaction.update(targetPlayerRef, { [`hoard.${tradeData.requestedTreasureId}`]: firebase.firestore.FieldValue.delete() });
+        
+        transaction.update(targetPlayerRef, { [`hoard.${tradeData.offeredTreasureId}`]: { ...offeredItem, count: (targetPlayerData.hoard[tradeData.offeredTreasureId]?.count || 0) + 1 } });
+        transaction.update(offeringPlayerRef, { [`hoard.${tradeData.requestedTreasureId}`]: { ...requestedItem, count: (offeringPlayerData.hoard[tradeData.requestedTreasureId]?.count || 0) + 1 } });
         transaction.update(tradeRef, { status: "accepted" });
       });
-      
-      console.log("Trade successful!");
-      // Manually refresh both players' displays if they are the current user
       await updateHoardDisplay(currentUser.uid);
     } catch (error) {
       console.error("Trade failed: ", error);
