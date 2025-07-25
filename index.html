@@ -5,6 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>P'ckit Dragons MVP</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+  /* Basic page styling */
+  body {
+    background-color: #2c3e50; /* A dark, neutral background */
+    color: #ecf0f1;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 15px;
+  }
+
+  /* Main Dashboard Container - uses Flexbox to create columns */
+  .game-dashboard {
+    display: flex;
+    gap: 20px; /* The space between columns */
+  }
+
+  /* Styling for each column */
+  .dashboard-column {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid #34495e;
+    border-radius: 8px;
+    padding: 15px;
+  }
+
+  /* Define the column widths using flex properties */
+  #playerHub {
+    flex: 1; /* Occupy 1 part of the available space */
+  }
+  #activityPanel {
+    flex: 2; /* Occupy 2 parts of the space (twice as wide) */
+  }
+  #socialPanel {
+    flex: 1; /* Occupy 1 part of the space */
+  }
+
+  h1, h2 {
+    color: #95a5a6;
+    border-bottom: 2px solid #34495e;
+    padding-bottom: 5px;
+  }
+</style>
 </head>
 <body>
   <div class="game-dashboard">
