@@ -554,5 +554,6 @@ async function populateTradeDropdowns() {
 document.getElementById("pvpChallengeBtn").onclick = async () => {
   await pvpChallenge();
 };
+}); // Closes window.addEventListener('DOMContentLoaded', ...)
 
 
