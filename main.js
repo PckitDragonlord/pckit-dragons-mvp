@@ -380,7 +380,7 @@ window.addEventListener("DOMContentLoaded", () => {
         await loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(currentUser.uid);
-        await updateHoardDisplay();
+        await updateHoardDisplay(currentUser.uid);
         await loadIncomingTrades();
         await loadAvailableTrades();
 
