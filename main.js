@@ -15,7 +15,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
   const hoardScoreSpan = document.getElementById('hoardScore');
-  
+
   let currentBook = null;
 
   signInBtn.onclick = () => {
@@ -27,38 +27,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     firebase.auth().signOut();
   };
 
-
+  // ✅ Correct: this stays here
   alert("Welcome! You've been gifted Magical Gum to start your hoard!");
 
-
-
-      // Pre-fill display name
-      const updatedPlayerDoc = await playerRef.get(); // not getDoc() in v8
-      if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
-        document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
-      }
-
-      loadPlayerDragon();
-      await loadZones();  // <-- Make sure zones load AFTER login
-      await loadPvPOpponents(user.uid);  // ✅ Pass UID to exclude self
-      await populateTradeDropdowns();
-
-
-      updateHoardDisplay(user.uid);
-
-    } catch (error) {
-      console.error("Error during sign-in logic:", error);
-    }
-  } else {
-    currentUser = null;
-    userInfo.textContent = 'Not signed in';
-    signInBtn.style.display = 'inline';
-    signOutBtn.style.display = 'none';
-    document.getElementById('explorationSection').style.display = 'none';
-    document.getElementById('dragonSelection').style.display = 'none';
-  }
+  // ✅ All remaining logic (e.g., onAuthStateChanged) continues here
 });
-
 
 async function loadZones() {
   console.log("Loading zones...");
@@ -585,6 +558,5 @@ async function populateTradeDropdowns() {
 document.getElementById("pvpChallengeBtn").onclick = async () => {
   await pvpChallenge();
 };
-}); // Closes window.addEventListener('DOMContentLoaded', ...)
 
 
