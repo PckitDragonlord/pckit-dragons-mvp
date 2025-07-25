@@ -40,16 +40,19 @@ firebase.auth().onAuthStateChanged(async (user) => {
       const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
       const playerDoc = await playerRef.get();
 
-      if (!playerDoc.exists) {
-        await playerRef.set({
-          username: user.displayName || "New Player",
-          email: user.email || "",
-          hoardScore: 0,
-          activeDragonId: "starstorm001",
-          treasureIds: [],
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
+  if (!playerDoc.exists) {
+  await playerRef.set({
+    username: user.displayName || "New Player",
+    email: user.email || "",
+    hoardScore: 0,
+    activeDragonId: "starstorm001",
+    treasureIds: ["univ003"], // 🎁 Starter gum
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert("Welcome! You've been gifted Magical Gum to start your hoard!");
+}
+
 
       // Pre-fill display name
       const updatedPlayerDoc = await playerRef.get(); // not getDoc() in v8
