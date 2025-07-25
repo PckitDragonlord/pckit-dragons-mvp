@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
   alert("Welcome! You've been gifted Magical Gum to start your hoard!");
-}
+
 
 
       // Pre-fill display name
