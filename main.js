@@ -282,17 +282,18 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
 
   if (playerSnap.exists) {
     const playerData = playerSnap.data();
-    selectedDragonId = playerData.dragonID || "";
+    selectedDragonId = playerData.activeDragonId || ""; // ⚠️ fixed from 'dragonID'
     const hoardMap = playerData.hoard || {};
 
-    // 🔍 Fetch selected dragon's preferred treasure type
+    // Get dragon's preferred treasure type
     if (selectedDragonId) {
       const dragonSnap = await firebase.firestore().collection("dragons").doc(selectedDragonId).get();
       if (dragonSnap.exists) {
-        preferredType = dragonSnap.data().type || null; // e.g., "reli", "musi", etc.
+        preferredType = (dragonSnap.data().type || "").toLowerCase();
       }
     }
 
+    // Calculate hoard score
     Object.values(hoardMap).forEach(treasure => {
       const count = treasure.count || 1;
       const li = document.createElement('li');
@@ -309,10 +310,9 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
         case 'mythic': rarityScore = 30; break;
       }
 
-      // ⚖️ Apply 0.5x penalty for non-preferred, non-universal types
       const treasureType = (treasure.type || "").toLowerCase();
       const isUniversal = treasureType === "univ";
-      const isPreferred = treasureType === (preferredType || "").toLowerCase();
+      const isPreferred = treasureType === preferredType;
       const multiplier = isUniversal || isPreferred ? 1.0 : 0.5;
 
       score += rarityScore * multiplier * count;
@@ -320,37 +320,13 @@ document.getElementById("pvpChallengeBtn").onclick = pvpChallenge;
   }
 
   hoardScoreSpan.textContent = score;
-}
-  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
-const pvpBtn = document.getElementById('pvpChallengeBtn');
-const pvpResultBox = document.getElementById('pvpResultBox');
 
-async function loadPvPOpponents(currentUserId) {
-  const pvpDropdown = document.getElementById('pvpOpponentDropdown');
-  pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
-
+  // 🔒 Try updating the backend, but don't crash the front-end if it fails
   try {
-    const snapshot = await firebase.firestore().collection('players').get();
-
-    snapshot.forEach(doc => {
-      if (doc.id !== currentUserId) {
-        const playerData = doc.data();
-        const displayName = playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`;
-
-        const option = document.createElement('option');
-        option.value = doc.id;
-        option.textContent = displayName;
-        pvpDropdown.appendChild(option);
-      }
-    });
-  } catch (error) {
-    console.error("Error loading PvP opponents:", error);
+    await playerRef.update({ hoardScore: score });
+  } catch (e) {
+    console.warn("Failed to update hoardScore in Firestore:", e);
   }
-}
-  hoardScoreSpan.textContent = score;
-
-  // ✅ Sync back to Firestore
-  await playerRef.update({ hoardScore: score });
 }
 
 
