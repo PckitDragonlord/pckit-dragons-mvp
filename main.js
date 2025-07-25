@@ -27,38 +27,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     firebase.auth().signOut();
   };
 
-  
-try {
-  // Ensure Firestore player document exists
-  const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
-  const playerDoc = await playerRef.get();
-
-  if (!playerDoc.exists) {
-    await playerRef.set({
-      username: user.displayName || "New Player",
-      email: user.email || "",
-      hoardScore: 0,
-      activeDragonId: "starstorm001",
-      treasureIds: ["univ003"], // Magical Gum starter treasure
-      hoard: {
-        "univ003": {
-          count: 1,
-          name: "Magical Gum",
-          rarity: "heroic",
-          type: "univ"
-        }
-      },
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    alert("Welcome! You've been gifted Magical Gum to start your hoard!");
-  }
-
-} catch (error) {
-  console.error("Error initializing new player:", error);
-}
-
-
 
   alert("Welcome! You've been gifted Magical Gum to start your hoard!");
 }
