@@ -347,6 +347,11 @@ async function loadPvPOpponents(currentUserId) {
     console.error("Error loading PvP opponents:", error);
   }
 }
+  hoardScoreSpan.textContent = score;
+
+  // ✅ Sync back to Firestore
+  await playerRef.update({ hoardScore: score });
+}
 
 
 window.addEventListener("DOMContentLoaded", () => {
