@@ -15,7 +15,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   const exploreBtn = document.getElementById('exploreBtn');
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
- 
+
+ document.getElementById("submitTradeBtn").onclick = submitTradeProposal;
+
 
   let currentBook = null;
 
