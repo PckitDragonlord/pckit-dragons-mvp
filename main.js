@@ -349,7 +349,7 @@ async function loadPvPOpponents(currentUserId) {
 }
 
 
-window.onload = () => {
+window.addEventListener("DOMContentLoaded", () => {
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
