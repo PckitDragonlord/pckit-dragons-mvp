@@ -619,3 +619,25 @@ async function populateAvailableTrades() {
   }
 }
 
+async function populateOpenTradesDropdown() {
+  const dropdown = document.getElementById("openTradesDropdown");
+  dropdown.innerHTML = `<option value="">-- Choose a Trade --</option>`;
+
+  try {
+    const snapshot = await db.collection("trades")
+      .where("status", "==", "open")
+      .get();
+
+    snapshot.forEach(doc => {
+      const trade = doc.data();
+      if (trade.proposerId !== currentUser.uid) {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = `User ${trade.proposerId} offers ${trade.proposerTreasureId} for ${trade.desiredTreasureId}`;
+        dropdown.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error("Error loading open trades:", error);
+  }
+}
