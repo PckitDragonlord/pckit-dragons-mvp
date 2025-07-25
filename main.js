@@ -349,7 +349,7 @@ async function loadPvPOpponents(currentUserId) {
 }
 
 
-// Trigger PvP opponent loading after login
+window.onload = () => {
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
@@ -413,7 +413,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     document.getElementById('dragonSelection').style.display = 'none';
   }
 });
-
+};
 
 
 // Save Display Name
