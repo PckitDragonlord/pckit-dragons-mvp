@@ -561,4 +561,32 @@ document.getElementById("pvpChallengeBtn").onclick = async () => {
   await pvpChallenge();
 };
 
+async function submitTradeProposal() {
+  const proposerId = currentUser.uid;
+  const proposerTreasureId = document.getElementById("proposeOwnTreasure").value;
+  const desiredTreasureId = document.getElementById("proposeDesiredTreasure").value;
+
+  if (!proposerTreasureId || !desiredTreasureId) {
+    alert("Please select both treasures to propose a trade.");
+    return;
+  }
+
+  try {
+    const tradeData = {
+      proposerId: proposerId,
+      proposerTreasureId: proposerTreasureId,
+      desiredTreasureId: desiredTreasureId,
+      status: "open",
+      acceptedBy: null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const tradeRef = await firebase.firestore().collection("trades").add(tradeData);
+
+    alert(`Trade proposed! ID: ${tradeRef.id}`);
+  } catch (error) {
+    console.error("Failed to submit trade proposal:", error);
+    alert("Something went wrong submitting the trade.");
+  }
+}
 
