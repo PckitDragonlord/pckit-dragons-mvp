@@ -10,8 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const signOutBtn = document.getElementById('signOutBtn');
   const userInfo = document.getElementById('userInfo');
 
-  const dragonDropdown = document.getElementById('dragonDropdown');
-  const confirmDragonBtn = document.getElementById('confirmDragon');
+  const dragonDropdown = document.getElementById('dragonDropdown');;
   const zoneSelect = document.getElementById('zoneSelect');
   const exploreBtn = document.getElementById('exploreBtn');
   const discoveryBox = document.getElementById('discoveryBox');
@@ -60,6 +59,7 @@ async function loadZones() {
       dragonDropdown.value = data.dragonID || "";
     }
 
+      const confirmDragonBtn = document.getElementById('confirmDragon')
     confirmDragonBtn.onclick = async () => {
       const selectedDragon = dragonDropdown.value;
       if (!selectedDragon) {
