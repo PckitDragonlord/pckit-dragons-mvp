@@ -2,6 +2,8 @@ let currentUser = null;
 
 // main.js (no firebaseConfig or init here — all in firebase.js)
 
+ const hoardScoreSpan = document.getElementById('hoardScore');
+
 window.addEventListener('DOMContentLoaded', async () => {
 
   const signInBtn = document.getElementById('signInBtn');
@@ -14,7 +16,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const exploreBtn = document.getElementById('exploreBtn');
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
-  const hoardScoreSpan = document.getElementById('hoardScore');
+ 
 
   let currentBook = null;
 
