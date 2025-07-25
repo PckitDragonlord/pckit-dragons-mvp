@@ -138,13 +138,13 @@ async function pvpChallenge() {
     const playerRef = db.collection("players").doc(currentUser.uid);
     const playerSnap = await playerRef.get();
     const playerData = playerSnap.data();
-    const playerScore = playerData.hoardScore || 0;
+    const playerScore = await getHoardScore(currentUser.uid);
 
     // Get opponent's hoardScore
     const opponentRef = db.collection("players").doc(opponentId);
     const opponentSnap = await opponentRef.get();
     const opponentData = opponentSnap.data();
-    const opponentScore = opponentData.hoardScore || 0;
+    const opponentScore = await getHoardScore(opponentId);
 
     // Determine winner
     const playerRoll = playerScore * Math.random();
