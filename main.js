@@ -414,7 +414,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 };
-
+)
 
 // Save Display Name
 document.getElementById('saveDisplayNameBtn').addEventListener('click', async () => {
