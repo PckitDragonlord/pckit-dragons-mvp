@@ -389,7 +389,7 @@ window.addEventListener("DOMContentLoaded", () => {
         await loadZones();
         await loadPvPOpponents(currentUser.uid);
         await updateHoardDisplay();
-        await populateIncomingTrades();
+        await loadIncomingTrades();
         await populateAvailableTrades();
 
       } catch (error) {
