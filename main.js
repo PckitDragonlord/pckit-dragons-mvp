@@ -48,13 +48,49 @@ window.addEventListener('DOMContentLoaded', () => {
         const playerRef = db.collection("players").doc(currentUser.uid);
         const playerDoc = await playerRef.get();
 
+        // This block now handles adding starting treasure for new players
         if (!playerDoc.exists) {
+          console.log("New player detected. Creating document with starting treasure.");
+          
+          // 1. Fetch the starting treasure data from Firestore
+          const treasureId = "univ003"; // Corrected ID
+          const treasureRef = db.collection("treasures").doc(treasureId);
+          const treasureSnap = await treasureRef.get();
+
+          if (!treasureSnap.exists) {
+              console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
+              return; // Stop execution if we can't find the item
+          }
+
+          const startingTreasure = treasureSnap.data();
+          
+          // 2. Prepare the initial hoard object
+          const initialHoard = {
+              [treasureId]: {
+                  ...startingTreasure,
+                  count: 1
+              }
+          };
+
+          // 3. Calculate the starting hoard score
+          let startingScore = 0;
+          switch ((startingTreasure.rarity || '').toLowerCase()) {
+              case 'common': startingScore = 1; break;
+              case 'uncommon': startingScore = 3; break;
+              case 'heroic': startingScore = 6; break; // Correctly handles Heroic
+              case 'epic': startingScore = 10; break;
+              case 'legendary': startingScore = 20; break;
+              case 'mythic': startingScore = 30; break;
+              default: startingScore = 1;
+          }
+
+          // 4. Create the new player document with all starting data
           await playerRef.set({
             username: user.displayName || "New Player",
             email: user.email || "",
-            hoardScore: 0,
+            hoard: initialHoard,
+            hoardScore: startingScore,
             activeDragonId: null,
-            treasureIds: [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
@@ -196,7 +232,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   async function resolveAdventureWithCombat(book, userId) {
-    // This now uses the same score calculation as the display, including penalties.
     const hoardScore = await updateHoardDisplay(userId);
     const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
     const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
@@ -229,7 +264,7 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log("🎁 Dropped Treasure:", selectedTreasure.name || selectedTreasure.id);
 
     await addTreasureToHoard(userId, selectedTreasure);
-    await updateHoardDisplay(userId); // Update score and display after getting treasure
+    await updateHoardDisplay(userId);
   }
 
   async function addTreasureToHoard(userId, treasure) {
@@ -288,7 +323,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         const treasureType = (treasure.type || "").toLowerCase();
-        const isUniversal = treasureType === "univ";
+        const isUniversal = treasureType === "universal"; // Match "Universal" type from screenshot
         const isPreferred = treasureType === preferredType;
         const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
 
@@ -296,8 +331,8 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    hoardScoreSpan.textContent = Math.round(score); // Round score to avoid decimals
-    db.collection('players').doc(userId).update({ hoardScore: Math.round(score) }); // Also save score to player doc
+    hoardScoreSpan.textContent = score; // Display score with .5 if applicable
+    db.collection('players').doc(userId).update({ hoardScore: score }); // Save correct score
     return score;
   }
 
@@ -322,58 +357,53 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-async function pvpChallenge() {
-  const opponentId = pvpDropdown.value;
-  if (!opponentId) {
-    pvpResultBox.textContent = "Please select an opponent first.";
-    return;
-  }
-
-  // Disable button to prevent multiple clicks
-  pvpChallengeBtn.disabled = true;
-  pvpResultBox.textContent = "Challenging...";
-
-  try {
-    // Get current player's data
-    const playerRef = db.collection("players").doc(currentUser.uid);
-    const playerSnap = await playerRef.get();
-    const playerData = playerSnap.data();
-    const playerScore = playerData.hoardScore || 0;
-
-    // Get opponent's data
-    const opponentRef = db.collection("players").doc(opponentId);
-    const opponentSnap = await opponentRef.get();
-    const opponentData = opponentSnap.data();
-    const opponentScore = opponentData.hoardScore || 0;
-
-    // Determine winner
-    const playerRoll = playerScore * Math.random();
-    const opponentRoll = opponentScore * Math.random();
-
-    let resultText = `
-      You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
-      ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
-      → `;
-
-    if (playerRoll > opponentRoll) {
-      resultText += "You win! 🎉 You found a new treasure!";
-      // Call the existing function to drop a random treasure for the winner
-      await dropRandomTreasureAndAddToHoard(currentUser.uid);
-    } else if (playerRoll < opponentRoll) {
-      resultText += "You lose! Better luck next time.";
-    } else {
-      resultText += "It's a tie!";
+  async function pvpChallenge() {
+    const opponentId = pvpDropdown.value;
+    if (!opponentId) {
+      pvpResultBox.textContent = "Please select an opponent first.";
+      return;
     }
-    pvpResultBox.textContent = resultText;
 
-  } catch (error) {
-    console.error("PvP challenge failed:", error);
-    pvpResultBox.textContent = "An error occurred during PvP.";
-  } finally {
-    // Re-enable the button after the challenge is complete
-    pvpChallengeBtn.disabled = false;
+    pvpChallengeBtn.disabled = true;
+    pvpResultBox.textContent = "Challenging...";
+
+    try {
+      const playerRef = db.collection("players").doc(currentUser.uid);
+      const playerSnap = await playerRef.get();
+      const playerData = playerSnap.data();
+      const playerScore = playerData.hoardScore || 0;
+
+      const opponentRef = db.collection("players").doc(opponentId);
+      const opponentSnap = await opponentRef.get();
+      const opponentData = opponentSnap.data();
+      const opponentScore = opponentData.hoardScore || 0;
+
+      const playerRoll = playerScore * Math.random();
+      const opponentRoll = opponentScore * Math.random();
+
+      let resultText = `
+        You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
+        ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
+        → `;
+
+      if (playerRoll > opponentRoll) {
+        resultText += "You win! 🎉 You found a new treasure!";
+        await dropRandomTreasureAndAddToHoard(currentUser.uid);
+      } else if (playerRoll < opponentRoll) {
+        resultText += "You lose! Better luck next time.";
+      } else {
+        resultText += "It's a tie!";
+      }
+      pvpResultBox.textContent = resultText;
+
+    } catch (error) {
+      console.error("PvP challenge failed:", error);
+      pvpResultBox.textContent = "An error occurred during PvP.";
+    } finally {
+      pvpChallengeBtn.disabled = false;
+    }
   }
-}
+
   pvpChallengeBtn.onclick = pvpChallenge;
 
 });
