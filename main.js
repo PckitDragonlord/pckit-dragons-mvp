@@ -48,43 +48,32 @@ window.addEventListener('DOMContentLoaded', () => {
         const playerRef = db.collection("players").doc(currentUser.uid);
         const playerDoc = await playerRef.get();
 
-        // This block now handles adding starting treasure for new players
         if (!playerDoc.exists) {
           console.log("New player detected. Creating document with starting treasure.");
           
-          // 1. Fetch the starting treasure data from Firestore
-          const treasureId = "univ003"; // Corrected ID
+          const treasureId = "univ003";
           const treasureRef = db.collection("treasures").doc(treasureId);
           const treasureSnap = await treasureRef.get();
 
           if (!treasureSnap.exists) {
               console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
-              return; // Stop execution if we can't find the item
+              return;
           }
 
           const startingTreasure = treasureSnap.data();
-          
-          // 2. Prepare the initial hoard object
-          const initialHoard = {
-              [treasureId]: {
-                  ...startingTreasure,
-                  count: 1
-              }
-          };
+          const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
 
-          // 3. Calculate the starting hoard score
           let startingScore = 0;
           switch ((startingTreasure.rarity || '').toLowerCase()) {
               case 'common': startingScore = 1; break;
               case 'uncommon': startingScore = 3; break;
-              case 'heroic': startingScore = 6; break; // Correctly handles Heroic
+              case 'heroic': startingScore = 6; break;
               case 'epic': startingScore = 10; break;
               case 'legendary': startingScore = 20; break;
               case 'mythic': startingScore = 30; break;
               default: startingScore = 1;
           }
 
-          // 4. Create the new player document with all starting data
           await playerRef.set({
             username: user.displayName || "New Player",
             email: user.email || "",
@@ -100,7 +89,6 @@ window.addEventListener('DOMContentLoaded', () => {
           displayNameInput.value = updatedPlayerDoc.data().displayName;
         }
 
-        // Initial data loading
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
@@ -114,7 +102,6 @@ window.addEventListener('DOMContentLoaded', () => {
       userInfo.textContent = 'Not signed in';
       signInBtn.style.display = 'inline';
       signOutBtn.style.display = 'none';
-      // Hide all game sections
       document.getElementById('displayNameSection').style.display = 'none';
       document.getElementById('dragonSelection').style.display = 'none';
       document.getElementById('explorationSection').style.display = 'none';
@@ -135,7 +122,7 @@ window.addEventListener('DOMContentLoaded', () => {
       }, { merge: true });
 
       alert("Display name saved!");
-      await loadPvPOpponents(currentUser.uid); // Refresh opponent list with new name
+      await loadPvPOpponents(currentUser.uid);
     } catch (error) {
       console.error("Error saving display name:", error);
     }
@@ -178,7 +165,7 @@ window.addEventListener('DOMContentLoaded', () => {
       dragonID: selectedDragon
     }, { merge: true });
     alert("Dragon selected: " + selectedDragon);
-    await updateHoardDisplay(currentUser.uid); // Recalculate score with new dragon type
+    await updateHoardDisplay(currentUser.uid);
   };
 
   // --- Exploration & Combat ---
@@ -286,54 +273,59 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log(`Added ${treasure.name || treasure.id} to hoard (x${updatedTreasure.count})`);
   }
 
+  async function calculateHoardScore(playerData) {
+    let score = 0;
+    const hoardMap = playerData.hoard || {};
+    let preferredType = null;
+
+    if (playerData.dragonID) {
+      const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
+      if (dragonSnap.exists) {
+        preferredType = (dragonSnap.data().type || "").toLowerCase();
+      }
+    }
+
+    for (const treasure of Object.values(hoardMap)) {
+      const count = treasure.count || 1;
+      let rarityScore = 0;
+      switch ((treasure.rarity || '').toLowerCase()) {
+        case 'common': rarityScore = 1; break;
+        case 'uncommon': rarityScore = 3; break;
+        case 'heroic': rarityScore = 6; break;
+        case 'epic': rarityScore = 10; break;
+        case 'legendary': rarityScore = 20; break;
+        case 'mythic': rarityScore = 30; break;
+      }
+      const treasureType = (treasure.type || "").toLowerCase();
+      const isUniversal = treasureType === "universal";
+      const isPreferred = treasureType === preferredType;
+      const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
+      score += rarityScore * multiplier * count;
+    }
+    return score;
+  }
+
   async function updateHoardDisplay(userId) {
     const playerRef = db.collection("players").doc(userId);
     const playerSnap = await playerRef.get();
 
     hoardList.innerHTML = '';
-    let score = 0;
-    let preferredType = null;
-
     if (playerSnap.exists) {
       const playerData = playerSnap.data();
-      const selectedDragonId = playerData.dragonID || "";
+      const score = await calculateHoardScore(playerData);
       const hoardMap = playerData.hoard || {};
 
-      if (selectedDragonId) {
-        const dragonSnap = await db.collection("dragons").doc(selectedDragonId).get();
-        if (dragonSnap.exists) {
-          preferredType = (dragonSnap.data().type || "").toLowerCase();
-        }
-      }
+      Object.values(hoardMap).forEach(treasure => {
+          const li = document.createElement('li');
+          li.textContent = `${treasure.name} (x${treasure.count || 1}) — Rarity: ${treasure.rarity}`;
+          hoardList.appendChild(li);
+      });
 
-      for (const treasure of Object.values(hoardMap)) {
-        const count = treasure.count || 1;
-        const li = document.createElement('li');
-        li.textContent = `${treasure.name} (x${count}) — Rarity: ${treasure.rarity}`;
-        hoardList.appendChild(li);
-
-        let rarityScore = 0;
-        switch ((treasure.rarity || '').toLowerCase()) {
-          case 'common': rarityScore = 1; break;
-          case 'uncommon': rarityScore = 3; break;
-          case 'heroic': rarityScore = 6; break;
-          case 'epic': rarityScore = 10; break;
-          case 'legendary': rarityScore = 20; break;
-          case 'mythic': rarityScore = 30; break;
-        }
-
-        const treasureType = (treasure.type || "").toLowerCase();
-        const isUniversal = treasureType === "universal"; // Match "Universal" type from screenshot
-        const isPreferred = treasureType === preferredType;
-        const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
-
-        score += rarityScore * multiplier * count;
-      }
+      hoardScoreSpan.textContent = score;
+      db.collection('players').doc(userId).update({ hoardScore: score });
+      return score;
     }
-
-    hoardScoreSpan.textContent = score; // Display score with .5 if applicable
-    db.collection('players').doc(userId).update({ hoardScore: score }); // Save correct score
-    return score;
+    return 0;
   }
 
   // --- PvP ---
@@ -368,22 +360,20 @@ window.addEventListener('DOMContentLoaded', () => {
     pvpResultBox.textContent = "Challenging...";
 
     try {
-      const playerRef = db.collection("players").doc(currentUser.uid);
-      const playerSnap = await playerRef.get();
+      const playerSnap = await db.collection("players").doc(currentUser.uid).get();
       const playerData = playerSnap.data();
-      const playerScore = playerData.hoardScore || 0;
+      const playerScore = await calculateHoardScore(playerData);
 
-      const opponentRef = db.collection("players").doc(opponentId);
-      const opponentSnap = await opponentRef.get();
+      const opponentSnap = await db.collection("players").doc(opponentId).get();
       const opponentData = opponentSnap.data();
-      const opponentScore = opponentData.hoardScore || 0;
+      const opponentScore = await calculateHoardScore(opponentData);
 
-      const playerRoll = playerScore * Math.random();
-      const opponentRoll = opponentScore * Math.random();
+      const playerRoll = Math.floor(Math.random() * 100) + playerScore;
+      const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
 
       let resultText = `
-        You (${playerData.displayName || "You"}): ${playerRoll.toFixed(2)} vs 
-        ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(2)} 
+        You (${playerData.displayName || "You"}): ${playerRoll.toFixed(0)} vs 
+        ${opponentData.displayName || "Opponent"}: ${opponentRoll.toFixed(0)} 
         → `;
 
       if (playerRoll > opponentRoll) {
