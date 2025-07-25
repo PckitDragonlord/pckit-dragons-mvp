@@ -409,10 +409,64 @@ async function loadPvPOpponents(currentUserId) {
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
-    await loadPvPOpponents(user.uid);
-    // other startup functions...
+
+    // UI changes
+    userInfo.textContent = `Signed in as ${user.displayName || user.email}`;
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = 'inline';
+
+    try {
+      // Ensure Firestore player document exists
+      const playerRef = firebase.firestore().collection("players").doc(currentUser.uid);
+      const playerDoc = await playerRef.get();
+
+      if (!playerDoc.exists) {
+        await playerRef.set({
+          username: user.displayName || "New Player",
+          email: user.email || "",
+          hoardScore: 0,
+          activeDragonId: "starstorm001",
+          treasureIds: ["univ003"], // Magical Gum starter treasure
+          hoard: {
+            "univ003": {
+              count: 1,
+              name: "Magical Gum",
+              rarity: "heroic",
+              type: "univ"
+            }
+          },
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("Welcome! You've been gifted Magical Gum to start your hoard!");
+      }
+
+      // Pre-fill display name if set
+      const updatedPlayerDoc = await playerRef.get();
+      if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
+        document.getElementById('displayNameInput').value = updatedPlayerDoc.data().displayName;
+      }
+
+      await loadZones();                      // Load zone dropdown
+      await loadPvPOpponents(user.uid);       // Populate PvP opponent list
+      await populateTradeDropdowns();         // Populate trade dropdowns
+      await updateHoardDisplay(user.uid);     // Show hoard in DOM
+      loadPlayerDragon();                     // Hook up dragon select dropdown
+
+    } catch (error) {
+      console.error("Error during sign-in logic:", error);
+    }
+
+  } else {
+    currentUser = null;
+    userInfo.textContent = 'Not signed in';
+    signInBtn.style.display = 'inline';
+    signOutBtn.style.display = 'none';
+    document.getElementById('explorationSection').style.display = 'none';
+    document.getElementById('dragonSelection').style.display = 'none';
   }
 });
+
 
 
 // Save Display Name
