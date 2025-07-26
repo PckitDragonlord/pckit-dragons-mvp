@@ -1,3 +1,37 @@
+// main.js
+
+function showTab(tabName) {
+  // Hide all tab content panes
+  const tabPanes = document.querySelectorAll('.tab-pane');
+  tabPanes.forEach(pane => {
+    pane.style.display = 'none';
+  });
+
+  // De-activate all tab buttons
+  const tabButtons = document.querySelectorAll('.tab-button');
+  tabButtons.forEach(button => {
+    button.classList.remove('active');
+  });
+
+  // Show the specific tab pane we want
+  const selectedTab = document.getElementById(tabName + 'Tab');
+  if (selectedTab) {
+    selectedTab.style.display = 'block';
+  }
+  
+  // Find the button that was clicked and activate it
+  // This is a bit of a trick to find the button without passing 'this'
+  const activeButton = [...tabButtons].find(button => button.textContent.toLowerCase() === tabName);
+  if (activeButton) {
+    activeButton.classList.add('active');
+  }
+}
+
+// The rest of your main.js file starts here...
+window.addEventListener('DOMContentLoaded', () => {
+  // ...
+});
+
 // main.js - MVP Mechanics Complete
 
 window.addEventListener('DOMContentLoaded', () => {
