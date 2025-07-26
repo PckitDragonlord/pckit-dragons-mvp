@@ -291,33 +291,42 @@ signInBtn.onclick = () => {
     await updateHoardDisplay(userId);
   }
 
-  async function calculateHoardScore(playerData) {
-    let score = 0;
-    const hoardMap = playerData.hoard || {};
-    let preferredType = null;
-    if (playerData.dragonID) {
-      const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
-      if (dragonSnap.exists) preferredType = (dragonSnap.data().type || "").toLowerCase();
+ // REPLACE this function
+async function calculateHoardScore(playerData) {
+  let score = 0;
+  const hoardMap = playerData.hoard || {};
+  let preferredType = null;
+
+  if (playerData.dragonID) {
+    const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
+    if (dragonSnap.exists) {
+      // Get the dragon's preferred type, converted to lowercase
+      preferredType = (dragonSnap.data().type || "").toLowerCase();
     }
-    for (const treasure of Object.values(hoardMap)) {
-      const count = treasure.count || 1;
-      let rarityScore = 0;
-      switch ((treasure.rarity || '').toLowerCase()) {
-        case 'common': rarityScore = 1; break;
-        case 'uncommon': rarityScore = 3; break;
-        case 'heroic': rarityScore = 6; break;
-        case 'epic': rarityScore = 10; break;
-        case 'legendary': rarityScore = 20; break;
-        case 'mythic': rarityScore = 30; break;
-      }
-      const treasureType = (treasure.type || "").toLowerCase();
-      const isUniversal = treasureType === "universal";
-      const isPreferred = treasureType === preferredType;
-      const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
-      score += rarityScore * multiplier * count;
-    }
-    return score;
   }
+
+  for (const treasure of Object.values(hoardMap)) {
+    const count = treasure.count || 1;
+    let rarityScore = 0;
+    switch ((treasure.rarity || '').toLowerCase()) {
+      case 'common': rarityScore = 1; break;
+      case 'uncommon': rarityScore = 3; break;
+      case 'heroic': rarityScore = 6; break;
+      case 'epic': rarityScore = 10; break;
+      case 'legendary': rarityScore = 20; break;
+      case 'mythic': rarityScore = 30; break;
+    }
+
+    // Get the treasure's type, converted to lowercase
+    const treasureType = (treasure.type || "").toLowerCase();
+    const isUniversal = treasureType === "universal";
+    const isPreferred = treasureType === preferredType;
+    const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
+    
+    score += rarityScore * multiplier * count;
+  }
+  return score;
+}
 
 // REPLACE this function
 async function updateHoardDisplay(userId) {
