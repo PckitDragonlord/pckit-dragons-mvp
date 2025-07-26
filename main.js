@@ -1,4 +1,4 @@
-// main.js
+// main.js - Final Version with UI/UX Integration
 
 function showTab(tabName) {
   // Hide all tab content panes
@@ -20,19 +20,11 @@ function showTab(tabName) {
   }
   
   // Find the button that was clicked and activate it
-  // This is a bit of a trick to find the button without passing 'this'
   const activeButton = [...tabButtons].find(button => button.textContent.toLowerCase() === tabName);
   if (activeButton) {
     activeButton.classList.add('active');
   }
 }
-
-// The rest of your main.js file starts here...
-window.addEventListener('DOMContentLoaded', () => {
-  // ...
-});
-
-// main.js - MVP Mechanics Complete
 
 window.addEventListener('DOMContentLoaded', () => {
   // Constants
@@ -78,7 +70,6 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   signOutBtn.onclick = () => {
-    // Detach all realtime listeners to prevent memory leaks after logout
     tradeListeners.forEach(unsubscribe => unsubscribe());
     tradeListeners = [];
     firebase.auth().signOut();
@@ -91,43 +82,35 @@ window.addEventListener('DOMContentLoaded', () => {
         userInfo.textContent = `Signed in as: ${user.displayName}`;
         signInBtn.style.display = 'none';
         signOutBtn.style.display = 'inline';
-        // Show all game sections
         document.getElementById('displayNameSection').style.display = 'block';
         document.getElementById('dragonSelection').style.display = 'block';
-        document.getElementById('explorationSection').style.display = 'block';
-        document.getElementById('hoardSection').style.display = 'block';
-        document.getElementById('pvpSection').style.display = 'block';
-        document.getElementById('tradeSection').style.display = 'block';
 
         const playerRef = db.collection("players").doc(currentUser.uid);
         const playerDoc = await playerRef.get();
 
         if (!playerDoc.exists) {
           console.log("New player detected. Creating document with starting treasure.");
-          
           const treasureId = "univ003";
           const treasureRef = db.collection("treasures").doc(treasureId);
           const treasureSnap = await treasureRef.get();
 
           if (!treasureSnap.exists) {
-              console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
-              return;
+            console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
+            return;
           }
 
           const startingTreasure = treasureSnap.data();
           const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
-
           let startingScore = 0;
           switch ((startingTreasure.rarity || '').toLowerCase()) {
-              case 'common': startingScore = 1; break;
-              case 'uncommon': startingScore = 3; break;
-              case 'heroic': startingScore = 6; break;
-              case 'epic': startingScore = 10; break;
-              case 'legendary': startingScore = 20; break;
-              case 'mythic': startingScore = 30; break;
-              default: startingScore = 1;
+            case 'common': startingScore = 1; break;
+            case 'uncommon': startingScore = 3; break;
+            case 'heroic': startingScore = 6; break;
+            case 'epic': startingScore = 10; break;
+            case 'legendary': startingScore = 20; break;
+            case 'mythic': startingScore = 30; break;
+            default: startingScore = 1;
           }
-
           await playerRef.set({
             username: user.displayName || "New Player",
             email: user.email || "",
@@ -136,8 +119,6 @@ window.addEventListener('DOMContentLoaded', () => {
             activeDragonId: null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-
-          // --- NEW: Welcome alert for first-time players ---
           alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
         }
 
@@ -146,7 +127,6 @@ window.addEventListener('DOMContentLoaded', () => {
           displayNameInput.value = updatedPlayerDoc.data().displayName;
         }
 
-        // Load all game data
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
@@ -159,16 +139,12 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     } else {
       currentUser = null;
+      document.body.style.backgroundImage = 'none'; // Clear background on logout
       userInfo.textContent = 'Not signed in';
       signInBtn.style.display = 'inline';
       signOutBtn.style.display = 'none';
-      // Hide all game sections
       document.getElementById('displayNameSection').style.display = 'none';
       document.getElementById('dragonSelection').style.display = 'none';
-      document.getElementById('explorationSection').style.display = 'none';
-      document.getElementById('hoardSection').style.display = 'none';
-      document.getElementById('pvpSection').style.display = 'none';
-      document.getElementById('tradeSection').style.display = 'none';
     }
   });
 
@@ -187,24 +163,35 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Dragon & Zone Loading ---
+  
+  // NEW: Function to display the dragon's art
+  function displayDragon(dragonId) {
+    const dragonDisplay = document.getElementById('dragonDisplay');
+    if (dragonId) {
+      // Corrected path to your dragon images
+      dragonDisplay.innerHTML = `<img src="img/dragonsfullbody/${dragonId}.png" alt="Your Dragon" style="max-width: 100%; border-radius: 5px;">`;
+    } else {
+      dragonDisplay.innerHTML = ''; 
+    }
+  }
+  
   async function loadZones() {
     zoneSelect.innerHTML = `<option value="">-- Select a Zone --</option>`;
-    try {
-      const snapshot = await db.collection('zones').get();
-      snapshot.forEach(doc => {
-        const zone = doc.data();
-        zoneSelect.add(new Option(zone.name, doc.id));
-      });
-    } catch (error) {
-      console.error("Failed to load zones:", error);
+    const snapshot = await db.collection('zones').get();
+    snapshot.forEach(doc => zoneSelect.add(new Option(doc.data().name, doc.id)));
+  }
+
+  // UPDATED: Calls displayDragon on load
+  async function loadPlayerDragon() {
+    const docSnap = await db.collection('players').doc(currentUser.uid).get();
+    if (docSnap.exists) {
+      const dragonId = docSnap.data().dragonID || "";
+      dragonDropdown.value = dragonId;
+      displayDragon(dragonId); // Show the image on login
     }
   }
 
-  async function loadPlayerDragon() {
-    const docSnap = await db.collection('players').doc(currentUser.uid).get();
-    if (docSnap.exists) dragonDropdown.value = docSnap.data().dragonID || "";
-  }
-
+  // UPDATED: Calls displayDragon on confirm
   confirmDragonBtn.onclick = async () => {
     const selectedDragon = dragonDropdown.value;
     if (!selectedDragon) {
@@ -213,16 +200,24 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     await db.collection('players').doc(currentUser.uid).set({ dragonID: selectedDragon }, { merge: true });
     alert("Dragon selected: " + selectedDragon);
+    displayDragon(selectedDragon); // Show image immediately on selection
     await updateHoardDisplay(currentUser.uid);
   };
 
   // --- Exploration & Combat ---
+  
+  // UPDATED: Sets background and shows book cover
   exploreBtn.onclick = async () => {
     const zoneId = zoneSelect.value;
     if (!zoneId) {
       alert('Please select a zone first!');
       return;
     }
+    document.body.style.backgroundImage = `url('img/zones/${zoneId}.png')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+
     const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
     const snapshot = await booksRef.get();
     const books = [];
@@ -236,7 +231,15 @@ window.addEventListener('DOMContentLoaded', () => {
     currentBook = books[randomIndex];
 
     discoveryBox.innerHTML = `
-      <div class="book-card"><h3>${currentBook.title}</h3><p><strong>Rarity:</strong> ${currentBook.rarity}</p><p><strong>Difficulty:</strong> ${currentBook.difficulty}</p><div class="book-cover-placeholder"></div><button id="resolveBtn">Resolve Adventure</button><p id="combatResult"></p></div>`;
+      <div class="book-card">
+        <img src="img/adventurebooks/${currentBook.id}.png" alt="Cover for ${currentBook.title}" class="book-cover-art">
+        <h3>${currentBook.title}</h3>
+        <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
+        <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
+        <button id="resolveBtn">Resolve Adventure</button>
+        <p id="combatResult"></p>
+      </div>
+    `;
     document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
   };
 
@@ -314,6 +317,7 @@ window.addEventListener('DOMContentLoaded', () => {
     return score;
   }
 
+  // UPDATED: Renders hoard as a visual grid
   async function updateHoardDisplay(userId) {
     const playerSnap = await db.collection("players").doc(userId).get();
     hoardList.innerHTML = '';
@@ -321,11 +325,15 @@ window.addEventListener('DOMContentLoaded', () => {
       const playerData = playerSnap.data();
       const score = await calculateHoardScore(playerData);
       const hoardMap = playerData.hoard || {};
-      Object.values(hoardMap).forEach(treasure => {
-          const li = document.createElement('li');
-          li.textContent = `${treasure.name} (x${treasure.count || 1}) — Rarity: ${treasure.rarity}`;
-          hoardList.appendChild(li);
-      });
+      for (const item of Object.values(hoardMap)) {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <img src="img/treasures/${item.id}.png" alt="${item.name}">
+            <span class="hoard-item-count">x${item.count || 1}</span>
+        `;
+        li.title = `${item.name} - Rarity: ${item.rarity}`;
+        hoardList.appendChild(li);
+      };
       hoardScoreSpan.textContent = score;
       db.collection('players').doc(userId).update({ hoardScore: score });
       return score;
@@ -339,8 +347,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const snapshot = await db.collection('players').get();
     snapshot.forEach(doc => {
       if (doc.id !== currentUserId) {
-        const playerData = doc.data();
-        pvpDropdown.add(new Option(playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
+        pvpDropdown.add(new Option(doc.data().displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
       }
     });
   }
@@ -383,8 +390,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const snapshot = await db.collection('players').get();
     snapshot.forEach(doc => {
       if (doc.id !== currentUserId) {
-        const playerData = doc.data();
-        tradePartnerSelect.add(new Option(playerData.displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
+        tradePartnerSelect.add(new Option(doc.data().displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
       }
     });
   }
