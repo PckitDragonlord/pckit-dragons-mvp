@@ -83,7 +83,7 @@
   <button class="tab-button" onclick="showTab('trade')">Trade</button>
 </div>
 
-      <div id="tabContent">
+<div id="tabContent">
   <div id="dragonSelection" style="display:none;">
     <h3>Choose Your Dragon</h3>
     <select id="dragonDropdown">
@@ -119,12 +119,38 @@
   </div>
 
   <div id="tradeTab" class="tab-pane" style="display:none;">
-    <div id="tradeSection">
+    <div id="tradeSection" style="margin-top: 20px;">
+      <h2>Trade Treasures</h2>
+      
+      <div id="createTrade" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
+        <h3>Propose a New Trade</h3>
+        <div>
+          <label for="tradePartnerSelect">Trade with:</label>
+          <select id="tradePartnerSelect">
+            <option value="">-- Select a Player --</option>
+          </select>
+          <button id="loadPlayerHoardsBtn">View Hoards</button>
+        </div>
+        <div id="tradeOfferCreation" style="display: none; margin-top: 10px;">
+          <p><strong>You Offer:</strong></p>
+          <select id="offerItemSelect"></select>
+          <p style="margin-top: 10px;"><strong>You Request:</strong></p>
+          <select id="requestItemSelect"></select>
+          <button id="proposeTradeBtn" style="margin-top: 15px;">Propose Trade</button>
+          <p id="tradeProposalResult"></p>
+        </div>
       </div>
+
+      <div id="viewTrades">
+        <h3>Your Trade Offers</h3>
+        <h4>Incoming Offers (From other players)</h4>
+        <ul id="incomingOffersList"></ul>
+        <h4>Outgoing Offers (Sent by you)</h4>
+        <ul id="outgoingOffersList"></ul>
+      </div>
+    </div>
   </div>
 </div>
-      
-    </div>
     
     <div id="socialPanel" class="dashboard-column">
       <h2>World Events</h2>
