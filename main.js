@@ -314,30 +314,35 @@ window.addEventListener('DOMContentLoaded', () => {
     return score;
   }
 
-  async function updateHoardDisplay(userId) {
-    const playerSnap = await db.collection("players").doc(userId).get();
-    const hoardList = document.getElementById('hoardList');
-    hoardList.innerHTML = '';
-    if (playerSnap.exists) {
-      const playerData = playerSnap.data();
-      const score = await calculateHoardScore(playerData);
-      const hoardMap = playerData.hoard || {};
-      for (const item of Object.values(hoardMap)) {
+// REPLACE this function
+async function updateHoardDisplay(userId) {
+  const playerSnap = await db.collection("players").doc(userId).get();
+  const hoardList = document.getElementById('hoardList');
+  hoardList.innerHTML = '';
+
+  if (playerSnap.exists) {
+    const playerData = playerSnap.data();
+    const score = await calculateHoardScore(playerData);
+    const hoardMap = playerData.hoard || {};
+
+    for (const item of Object.values(hoardMap)) {
         const li = document.createElement('li');
-        // Path updated to remove "/img"
+        // UPDATED: Added a span for the treasure name
         li.innerHTML = `
             <img src="/treasures/${item.id}.png" alt="${item.name}">
             <span class="hoard-item-count">x${item.count || 1}</span>
+            <span class="hoard-item-name">${item.name}</span>
         `;
         li.title = `${item.name} - Rarity: ${item.rarity}`;
         hoardList.appendChild(li);
-      };
-      hoardScoreSpan.textContent = score;
-      db.collection('players').doc(userId).update({ hoardScore: score });
-      return score;
-    }
-    return 0;
+    };
+
+    hoardScoreSpan.textContent = score;
+    db.collection('players').doc(userId).update({ hoardScore: score });
+    return score;
   }
+  return 0;
+}
 
   // --- PvP ---
   async function loadPvPOpponents(currentUserId) {
