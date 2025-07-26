@@ -206,67 +206,45 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Exploration & Combat ---
   
-// TEMPORARY DEBUGGING FUNCTION
+// Restore the original, working exploreBtn.onclick function
 exploreBtn.onclick = async () => {
-  const selectedZone = zoneSelect.value;
-  if (!selectedZone) {
+  const zoneId = zoneSelect.value;
+  if (!zoneId) {
     alert('Please select a zone first!');
     return;
   }
-
-  console.clear(); // Clears the console for fresh output
-  console.log(`--- STARTING DEBUG ---`);
-  console.log(`You selected Zone ID: '${selectedZone}'`);
   
-  console.log(`Fetching ALL books from the database to check their zone IDs...`);
+  document.body.style.backgroundImage = `url('/zones/${zoneId}.png')`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundAttachment = 'fixed';
 
-  const snapshot = await db.collection('adventureBooks').get();
-  
-  let foundBooksInZone = 0;
-  
-  snapshot.forEach(doc => {
-    const book = doc.data();
-    const bookZone = book.zoneId;
 
-    // We will print every book's zone ID
-    console.log(`- Title: ${book.title}, Zone ID: '${bookZone}'`);
+  const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
+  const snapshot = await booksRef.get();
+  const books = [];
+  snapshot.forEach(doc => books.push({ id: doc.id, ...doc.data() }));
 
-    // We will also check if it matches the selection
-    if (bookZone === selectedZone) {
-      console.log(`  ✅ MATCH! This book should appear.`);
-      foundBooksInZone++;
-    }
-  });
+  if (books.length === 0) {
+    discoveryBox.innerHTML = `<p>No adventure books available in this zone.</p>`;
+    return;
+  }
+  const randomIndex = Math.floor(Math.random() * books.length);
+  currentBook = books[randomIndex];
 
-  console.log(`--- DEBUG COMPLETE ---`);
-  console.log(`Found a total of ${foundBooksInZone} books matching '${selectedZone}'.`);
-  
-  // We will stop the function here so it doesn't try to render anything yet.
-  alert("Debug test finished. Check the browser console (F12) for results.");
+  discoveryBox.innerHTML = `
+    <div class="book-card">
+      <img src="/adventurebooks/${currentBook.id}.png" alt="Cover for ${currentBook.title}" class="book-cover-art">
+      <h3>${currentBook.title}</h3>
+      <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
+      <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
+      <button id="resolveBtn">Resolve Adventure</button>
+      <p id="combatResult"></p>
+    </div>
+  `;
+
+  document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
 };
-
-  function getDifficultyTarget(difficulty, hoardScore) {
-    switch ((difficulty || '').toLowerCase()) {
-      case 'easy': return hoardScore * 1.5;
-      case 'moderate': return hoardScore * 2.5;
-      case 'hard': return hoardScore * 3.5;
-      case 'extreme': return hoardScore * 5;
-      default: return hoardScore * 3;
-    }
-  }
-
-  async function resolveAdventureWithCombat(book, userId) {
-    const hoardScore = await updateHoardDisplay(userId);
-    const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
-    const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
-    const resultBox = document.getElementById('combatResult');
-    if (playerRoll >= enemyRoll) {
-      resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
-      await dropRandomTreasureAndAddToHoard(userId);
-    } else {
-      resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
-    }
-  }
 
   // --- Hoard & Treasure Management ---
   async function dropRandomTreasureAndAddToHoard(userId) {
