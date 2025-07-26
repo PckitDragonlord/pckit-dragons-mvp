@@ -64,10 +64,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Authentication ---
 
-  signInBtn.onclick = () => {
+// REPLACE this function
+signInBtn.onclick = () => {
+  // First, sign out any active user to ensure the account selection appears.
+  firebase.auth().signOut().then(() => {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider);
-  };
+  });
+};
 
   signOutBtn.onclick = () => {
     tradeListeners.forEach(unsubscribe => unsubscribe());
