@@ -331,8 +331,13 @@ async function updateHoardDisplay(userId) {
     const hoardMap = playerData.hoard || {};
 
     for (const item of Object.values(hoardMap)) {
+        // NEW: Add a check for a valid item ID to prevent errors
+        if (!item || !item.id) {
+          console.warn("Skipping invalid item in hoard:", item);
+          continue; // Skip to the next item
+        }
+
         const li = document.createElement('li');
-        // UPDATED: Added a span for the treasure name
         li.innerHTML = `
             <img src="/treasures/${item.id}.png" alt="${item.name}">
             <span class="hoard-item-count">x${item.count || 1}</span>
@@ -348,17 +353,6 @@ async function updateHoardDisplay(userId) {
   }
   return 0;
 }
-
-  // --- PvP ---
-  async function loadPvPOpponents(currentUserId) {
-    pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
-    const snapshot = await db.collection('players').get();
-    snapshot.forEach(doc => {
-      if (doc.id !== currentUserId) {
-        pvpDropdown.add(new Option(doc.data().displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
-      }
-    });
-  }
   
   pvpChallengeBtn.onclick = async () => {
     const opponentId = pvpDropdown.value;
