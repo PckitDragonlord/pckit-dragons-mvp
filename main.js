@@ -1,32 +1,35 @@
-// main.js - Final Version with Corrected Art Paths
-
-function showTab(tabName) {
-  // Hide all tab content panes
-  const tabPanes = document.querySelectorAll('.tab-pane');
-  tabPanes.forEach(pane => {
-    pane.style.display = 'none';
-  });
-
-  // De-activate all tab buttons
-  const tabButtons = document.querySelectorAll('.tab-button');
-  tabButtons.forEach(button => {
-    button.classList.remove('active');
-  });
-
-  // Show the specific tab pane we want
-  const selectedTab = document.getElementById(tabName + 'Tab');
-  if (selectedTab) {
-    selectedTab.style.display = 'block';
-  }
-  
-  // Find the button that was clicked and activate it
-  const activeButton = [...tabButtons].find(button => button.textContent.toLowerCase() === tabName);
-  if (activeButton) {
-    activeButton.classList.add('active');
-  }
-}
+// main.js - Final Version with Corrected Scope
 
 window.addEventListener('DOMContentLoaded', () => {
+  // This function is now inside the listener
+  function showTab(tabName) {
+    // Hide all tab content panes
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    tabPanes.forEach(pane => {
+      pane.style.display = 'none';
+    });
+
+    // De-activate all tab buttons
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+      button.classList.remove('active');
+    });
+
+    // Show the specific tab pane we want
+    const selectedTab = document.getElementById(tabName + 'Tab');
+    if (selectedTab) {
+      selectedTab.style.display = 'block';
+    }
+    
+    // Find the button that was clicked and activate it
+    const activeButton = [...tabButtons].find(button => button.textContent.toLowerCase() === tabName);
+    if (activeButton) {
+      activeButton.classList.add('active');
+    }
+  }
+  // Attach the function to the window object so HTML can access it
+  window.showTab = showTab;
+
   // Constants
   const MINIMUM_HOARD_SCORE = 5;
 
@@ -64,15 +67,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Authentication ---
 
-// REPLACE this function
-signInBtn.onclick = () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  
-  // This is the new, important line:
-  provider.setCustomParameters({ prompt: 'select_account' });
-  
-  firebase.auth().signInWithPopup(provider);
-};
+  signInBtn.onclick = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    firebase.auth().signInWithPopup(provider);
+  };
 
   signOutBtn.onclick = () => {
     tradeListeners.forEach(unsubscribe => unsubscribe());
@@ -144,7 +143,7 @@ signInBtn.onclick = () => {
       }
     } else {
       currentUser = null;
-      document.body.style.backgroundImage = 'none'; // Clear background on logout
+      document.body.style.backgroundImage = 'none';
       userInfo.textContent = 'Not signed in';
       signInBtn.style.display = 'inline';
       signOutBtn.style.display = 'none';
@@ -172,7 +171,6 @@ signInBtn.onclick = () => {
   function displayDragon(dragonId) {
     const dragonDisplay = document.getElementById('dragonDisplay');
     if (dragonId) {
-      // Path updated to remove "/img"
       dragonDisplay.innerHTML = `<img src="/dragonsfullbody/${dragonId}.png" alt="Your Dragon" style="max-width: 100%; border-radius: 5px;">`;
     } else {
       dragonDisplay.innerHTML = ''; 
@@ -214,7 +212,6 @@ signInBtn.onclick = () => {
       alert('Please select a zone first!');
       return;
     }
-    // Path updated to remove "/img"
     document.body.style.backgroundImage = `url('/zones/${zoneId}.png')`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
@@ -291,61 +288,47 @@ signInBtn.onclick = () => {
     await updateHoardDisplay(userId);
   }
 
- // REPLACE this function
-async function calculateHoardScore(playerData) {
-  let score = 0;
-  const hoardMap = playerData.hoard || {};
-  let preferredType = null;
-
-  if (playerData.dragonID) {
-    const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
-    if (dragonSnap.exists) {
-      // Get the dragon's preferred type, converted to lowercase
-      preferredType = (dragonSnap.data().type || "").toLowerCase();
-    }
-  }
-
-  for (const treasure of Object.values(hoardMap)) {
-    const count = treasure.count || 1;
-    let rarityScore = 0;
-    switch ((treasure.rarity || '').toLowerCase()) {
-      case 'common': rarityScore = 1; break;
-      case 'uncommon': rarityScore = 3; break;
-      case 'heroic': rarityScore = 6; break;
-      case 'epic': rarityScore = 10; break;
-      case 'legendary': rarityScore = 20; break;
-      case 'mythic': rarityScore = 30; break;
-    }
-
-    // Get the treasure's type, converted to lowercase
-    const treasureType = (treasure.type || "").toLowerCase();
-    const isUniversal = treasureType === "universal";
-    const isPreferred = treasureType === preferredType;
-    const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
-    
-    score += rarityScore * multiplier * count;
-  }
-  return score;
-}
-
-// REPLACE this function
-async function updateHoardDisplay(userId) {
-  const playerSnap = await db.collection("players").doc(userId).get();
-  const hoardList = document.getElementById('hoardList');
-  hoardList.innerHTML = '';
-
-  if (playerSnap.exists) {
-    const playerData = playerSnap.data();
-    const score = await calculateHoardScore(playerData);
+  async function calculateHoardScore(playerData) {
+    let score = 0;
     const hoardMap = playerData.hoard || {};
+    let preferredType = null;
+    if (playerData.dragonID) {
+      const dragonSnap = await db.collection("dragons").doc(playerData.dragonID).get();
+      if (dragonSnap.exists) preferredType = (dragonSnap.data().type || "").toLowerCase();
+    }
+    for (const treasure of Object.values(hoardMap)) {
+      const count = treasure.count || 1;
+      let rarityScore = 0;
+      switch ((treasure.rarity || '').toLowerCase()) {
+        case 'common': rarityScore = 1; break;
+        case 'uncommon': rarityScore = 3; break;
+        case 'heroic': rarityScore = 6; break;
+        case 'epic': rarityScore = 10; break;
+        case 'legendary': rarityScore = 20; break;
+        case 'mythic': rarityScore = 30; break;
+      }
+      const treasureType = (treasure.type || "").toLowerCase();
+      const isUniversal = treasureType === "universal";
+      const isPreferred = treasureType === preferredType;
+      const multiplier = (isUniversal || isPreferred) ? 1.0 : 0.5;
+      score += rarityScore * multiplier * count;
+    }
+    return score;
+  }
 
-    for (const item of Object.values(hoardMap)) {
-        // NEW: Add a check for a valid item ID to prevent errors
+  async function updateHoardDisplay(userId) {
+    const playerSnap = await db.collection("players").doc(userId).get();
+    const hoardList = document.getElementById('hoardList');
+    hoardList.innerHTML = '';
+    if (playerSnap.exists) {
+      const playerData = playerSnap.data();
+      const score = await calculateHoardScore(playerData);
+      const hoardMap = playerData.hoard || {};
+      for (const item of Object.values(hoardMap)) {
         if (!item || !item.id) {
           console.warn("Skipping invalid item in hoard:", item);
-          continue; // Skip to the next item
+          continue;
         }
-
         const li = document.createElement('li');
         li.innerHTML = `
             <img src="/treasures/${item.id}.png" alt="${item.name}">
@@ -354,14 +337,24 @@ async function updateHoardDisplay(userId) {
         `;
         li.title = `${item.name} - Rarity: ${item.rarity}`;
         hoardList.appendChild(li);
-    };
-
-    hoardScoreSpan.textContent = score;
-    db.collection('players').doc(userId).update({ hoardScore: score });
-    return score;
+      };
+      hoardScoreSpan.textContent = score;
+      db.collection('players').doc(userId).update({ hoardScore: score });
+      return score;
+    }
+    return 0;
   }
-  return 0;
-}
+
+  // --- PvP ---
+  async function loadPvPOpponents(currentUserId) {
+    pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
+    const snapshot = await db.collection('players').get();
+    snapshot.forEach(doc => {
+      if (doc.id !== currentUserId) {
+        pvpDropdown.add(new Option(doc.data().displayName || `Player (${doc.id.substring(0, 6)}...)`, doc.id));
+      }
+    });
+  }
   
   pvpChallengeBtn.onclick = async () => {
     const opponentId = pvpDropdown.value;
