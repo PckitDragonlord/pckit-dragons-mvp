@@ -1,4 +1,4 @@
-// main.js - Final Version with UI/UX Integration
+// main.js - Final Version with Corrected Art Paths
 
 function showTab(tabName) {
   // Hide all tab content panes
@@ -164,12 +164,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Dragon & Zone Loading ---
   
-  // NEW: Function to display the dragon's art
   function displayDragon(dragonId) {
     const dragonDisplay = document.getElementById('dragonDisplay');
     if (dragonId) {
-      // Corrected path to your dragon images
-      dragonDisplay.innerHTML = `<img src="img/dragonsfullbody/${dragonId}.png" alt="Your Dragon" style="max-width: 100%; border-radius: 5px;">`;
+      // Path updated to remove "/img"
+      dragonDisplay.innerHTML = `<img src="/dragonsfullbody/${dragonId}.png" alt="Your Dragon" style="max-width: 100%; border-radius: 5px;">`;
     } else {
       dragonDisplay.innerHTML = ''; 
     }
@@ -181,17 +180,15 @@ window.addEventListener('DOMContentLoaded', () => {
     snapshot.forEach(doc => zoneSelect.add(new Option(doc.data().name, doc.id)));
   }
 
-  // UPDATED: Calls displayDragon on load
   async function loadPlayerDragon() {
     const docSnap = await db.collection('players').doc(currentUser.uid).get();
     if (docSnap.exists) {
       const dragonId = docSnap.data().dragonID || "";
       dragonDropdown.value = dragonId;
-      displayDragon(dragonId); // Show the image on login
+      displayDragon(dragonId);
     }
   }
 
-  // UPDATED: Calls displayDragon on confirm
   confirmDragonBtn.onclick = async () => {
     const selectedDragon = dragonDropdown.value;
     if (!selectedDragon) {
@@ -200,20 +197,20 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     await db.collection('players').doc(currentUser.uid).set({ dragonID: selectedDragon }, { merge: true });
     alert("Dragon selected: " + selectedDragon);
-    displayDragon(selectedDragon); // Show image immediately on selection
+    displayDragon(selectedDragon);
     await updateHoardDisplay(currentUser.uid);
   };
 
   // --- Exploration & Combat ---
   
-  // UPDATED: Sets background and shows book cover
   exploreBtn.onclick = async () => {
     const zoneId = zoneSelect.value;
     if (!zoneId) {
       alert('Please select a zone first!');
       return;
     }
-    document.body.style.backgroundImage = `url('img/zones/${zoneId}.png')`;
+    // Path updated to remove "/img"
+    document.body.style.backgroundImage = `url('/zones/${zoneId}.png')`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
     document.body.style.backgroundAttachment = 'fixed';
@@ -232,7 +229,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     discoveryBox.innerHTML = `
       <div class="book-card">
-        <img src="img/adventurebooks/${currentBook.id}.png" alt="Cover for ${currentBook.title}" class="book-cover-art">
+        <img src="/adventurebooks/${currentBook.id}.png" alt="Cover for ${currentBook.title}" class="book-cover-art">
         <h3>${currentBook.title}</h3>
         <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
         <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
@@ -317,9 +314,9 @@ window.addEventListener('DOMContentLoaded', () => {
     return score;
   }
 
-  // UPDATED: Renders hoard as a visual grid
   async function updateHoardDisplay(userId) {
     const playerSnap = await db.collection("players").doc(userId).get();
+    const hoardList = document.getElementById('hoardList');
     hoardList.innerHTML = '';
     if (playerSnap.exists) {
       const playerData = playerSnap.data();
@@ -327,8 +324,9 @@ window.addEventListener('DOMContentLoaded', () => {
       const hoardMap = playerData.hoard || {};
       for (const item of Object.values(hoardMap)) {
         const li = document.createElement('li');
+        // Path updated to remove "/img"
         li.innerHTML = `
-            <img src="img/treasures/${item.id}.png" alt="${item.name}">
+            <img src="/treasures/${item.id}.png" alt="${item.name}">
             <span class="hoard-item-count">x${item.count || 1}</span>
         `;
         li.title = `${item.name} - Rarity: ${item.rarity}`;
