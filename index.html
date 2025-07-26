@@ -69,6 +69,23 @@
     .tab-pane {
       padding-top: 20px;
     }
+
+    /* Constrains the dragon image to its container */
+#dragonDisplay img {
+  width: 100%; /* Make the image fill the width of the container */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 5px;
+}
+
+/* Fixes the hoard item images */
+#hoardList li img {
+  max-width: 80%;
+  max-height: 80%;
+  image-rendering: pixelated; /* Keeps pixel art sharp */
+  /* This prevents the alt text from affecting layout if an image is broken */
+  display: inline-block; 
+  vertical-align: middle;
+}
   </style>
 </head>
 <body>
