@@ -66,11 +66,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // REPLACE this function
 signInBtn.onclick = () => {
-  // First, sign out any active user to ensure the account selection appears.
-  firebase.auth().signOut().then(() => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider);
-  });
+  const provider = new firebase.auth.GoogleAuthProvider();
+  
+  // This is the new, important line:
+  provider.setCustomParameters({ prompt: 'select_account' });
+  
+  firebase.auth().signInWithPopup(provider);
 };
 
   signOutBtn.onclick = () => {
