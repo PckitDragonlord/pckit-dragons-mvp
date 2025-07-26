@@ -77,6 +77,7 @@
     
     <div id="playerHub" class="dashboard-column">
       <h2>Your Lair</h2>
+      <div id="dragonDisplay"></div>
       <div id="playerInfo">
         <button id="signInBtn">Sign in with Google</button>
         <button id="signOutBtn" style="display:none;">Sign Out</button>
@@ -103,7 +104,59 @@
         <div id="dragonSelection" style="display:none;">
             <h3>Choose Your Dragon</h3>
             <select id="dragonDropdown">
-                <option value="">-- Select a Dragon --</option><option value="spitfire001">Spitfire (Tech)</option><option value
-
-
-
+                <option value="">-- Select a Dragon --</option><option value="spitfire001">Spitfire (Tech)</option><option value="starstorm001">Starstorm (Relic)</option><option value="smerd001">Smerd (Junk Food)</option><option value="roxxie001">Roxxie (Maps)</option><option value="melody001">Melody (Music)</option><option value="icicle001">Icicle (Memory)</option>
+            </select>
+            <button id="confirmDragon">Confirm</button>
+        </div>
+        <div id="exploreTab" class="tab-pane" style="display: block;">
+            <div id="explorationSection">
+                <label for="zoneSelect">Choose a Zone:</label>
+                <select id="zoneSelect"><option value="">-- Select a Zone --</option></select>
+                <button id="exploreBtn">Explore</button>
+            </div>
+            <div id="discoveryBox" class="book-discovery"></div>
+        </div>
+        <div id="challengeTab" class="tab-pane" style="display: none;">
+            <div id="pvpSection">
+                <h3>Challenge Another Dragon</h3>
+                <select id="pvpOpponentDropdown"><option value="">-- Select Opponent --</option></select>
+                <button id="pvpChallengeBtn">Challenge!</button>
+                <p id="pvpResultBox"></p>
+            </div>
+        </div>
+        <div id="tradeTab" class="tab-pane" style="display: none;">
+            <div id="tradeSection" style="margin-top: 20px;">
+                <h2>Trade Treasures</h2>
+                <div id="createTrade" style="border: 1px solid rgb(204, 204, 204); padding: 10px; margin-bottom: 20px;">
+                    <h3>Propose a New Trade</h3>
+                    <div>
+                        <label for="tradePartnerSelect">Trade with:</label>
+                        <select id="tradePartnerSelect"><option value="">-- Select a Player --</option></select>
+                        <button id="loadPlayerHoardsBtn">View Hoards</button>
+                    </div>
+                    <div id="tradeOfferCreation" style="display: none; margin-top: 10px;">
+                        <p><strong>You Offer:</strong></p><select id="offerItemSelect"></select>
+                        <p style="margin-top: 10px;"><strong>You Request:</strong></p><select id="requestItemSelect"></select>
+                        <button id="proposeTradeBtn" style="margin-top: 15px;">Propose Trade</button>
+                        <p id="tradeProposalResult"></p>
+                    </div>
+                </div>
+                <div id="viewTrades">
+                    <h3>Your Trade Offers</h3>
+                    <h4>Incoming Offers (From other players)</h4><ul id="incomingOffersList"></ul>
+                    <h4>Outgoing Offers (Sent by you)</h4><ul id="outgoingOffersList"></ul>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div> <div id="socialPanel" class="dashboard-column">
+      <h2>World Events</h2>
+      <div id="leaderboard"></div>
+      <div id="eventLog"></div>
+    </div> </div> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="./firebase.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>
