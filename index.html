@@ -6,191 +6,104 @@
   <title>P'ckit Dragons MVP</title>
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <style>
-  /* Basic page styling */
-  body {
-    background-color: #2c3e50; /* A dark, neutral background */
-    color: #ecf0f1;
-    font-family: sans-serif;
-    margin: 0;
-    padding: 15px;
-  }
+    /* Basic page styling */
+    body {
+      background-color: #2c3e50; /* A dark, neutral background */
+      color: #ecf0f1;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 15px;
+    }
 
-  /* Main Dashboard Container - uses Flexbox to create columns */
-  .game-dashboard {
-    display: flex;
-    gap: 20px; /* The space between columns */
-  }
+    /* Main Dashboard Container - uses Flexbox to create columns */
+    .game-dashboard {
+      display: flex;
+      gap: 20px; /* The space between columns */
+    }
 
-  /* Styling for each column */
-  .dashboard-column {
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid #34495e;
-    border-radius: 8px;
-    padding: 15px;
-  }
+    /* Styling for each column */
+    .dashboard-column {
+      background-color: rgba(0, 0, 0, 0.2);
+      border: 1px solid #34495e;
+      border-radius: 8px;
+      padding: 15px;
+    }
 
-  /* Define the column widths using flex properties */
-  #playerHub {
-    flex: 1; /* Occupy 1 part of the available space */
-  }
-  #activityPanel {
-    flex: 2; /* Occupy 2 parts of the space (twice as wide) */
-  }
-  #socialPanel {
-    flex: 1; /* Occupy 1 part of the space */
-  }
+    /* Define the column widths using flex properties */
+    #playerHub {
+      flex: 1; /* Occupy 1 part of the available space */
+    }
+    #activityPanel {
+      flex: 2; /* Occupy 2 parts of the space (twice as wide) */
+    }
+    #socialPanel {
+      flex: 1; /* Occupy 1 part of the space */
+    }
 
-  h1, h2 {
-    color: #95a5a6;
-    border-bottom: 2px solid #34495e;
-    padding-bottom: 5px;
-  }
+    h1, h2 {
+      color: #95a5a6;
+      border-bottom: 2px solid #34495e;
+      padding-bottom: 5px;
+    }
 
-    /* Styling for the tab buttons */
-  .tab-button {
-    background-color: #34495e;
-    border: none;
-    color: #ecf0f1;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px 5px 0 0;
-    margin-right: 5px;
-    opacity: 0.7;
-  }
-  
-  /* Styling for the ACTIVE tab button */
-  .tab-button.active {
-    background-color: #4e6a85; /* A slightly lighter, more prominent color */
-    opacity: 1;
-  }
+      /* Styling for the tab buttons */
+    .tab-button {
+      background-color: #34495e;
+      border: none;
+      color: #ecf0f1;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+      opacity: 0.7;
+    }
+    
+    /* Styling for the ACTIVE tab button */
+    .tab-button.active {
+      background-color: #4e6a85; /* A slightly lighter, more prominent color */
+      opacity: 1;
+    }
 
-  /* A little spacing for the tab content */
-  .tab-pane {
-    padding-top: 20px;
-  }
-</style>
+    /* A little spacing for the tab content */
+    .tab-pane {
+      padding-top: 20px;
+    }
+  </style>
 </head>
 <body>
+
   <div class="game-dashboard">
     
     <div id="playerHub" class="dashboard-column">
       <h2>Your Lair</h2>
-      
-      <div id="dragonDisplay"></div>
-      
-     <div id="playerInfo">
-  <button id="signInBtn">Sign in with Google</button>
-  <button id="signOutBtn" style="display:none;">Sign Out</button>
-  <p id="userInfo">Not signed in</p>
-
-  <div id="displayNameSection" style="display:none;">
-    <label for="displayNameInput">Set Display Name:</label>
-    <input type="text" id="displayNameInput" placeholder="e.g. FlameLord42">
-    <button id="saveDisplayNameBtn">Save</button>
-  </div>
-</div>
-      
+      <div id="playerInfo">
+        <button id="signInBtn">Sign in with Google</button>
+        <button id="signOutBtn" style="display:none;">Sign Out</button>
+        <p id="userInfo">Not signed in</p>
+        <div id="displayNameSection" style="display:none;">
+          <label for="displayNameInput">Set Display Name:</label>
+          <input type="text" id="displayNameInput" placeholder="e.g. FlameLord42">
+          <button id="saveDisplayNameBtn">Save</button>
+        </div>
+      </div>
       <div id="hoardDisplay">
-  <h3>Your Hoard</h3>
-  <ul id="hoardList"></ul>
-  <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
-</div>
-    </div>
-    
-    <div id="activityPanel" class="dashboard-column">
+        <h3>Your Hoard</h3>
+        <ul id="hoardList"></ul>
+        <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
+      </div>
+    </div> <div id="activityPanel" class="dashboard-column">
       <h1>P'ckit Dragons</h1>
-
-     <div id="tabNav">
-  <button class="tab-button" onclick="showTab('explore')">Explore</button>
-  <button class="tab-button" onclick="showTab('challenge')">Challenge</button>
-  <button class="tab-button" onclick="showTab('trade')">Trade</button>
-</div>
-
-<div id="tabContent">
-  <div id="dragonSelection" style="display:none;">
-    <h3>Choose Your Dragon</h3>
-    <select id="dragonDropdown">
-      <option value="">-- Select a Dragon --</option>
-      <option value="spitfire001">Spitfire (Tech)</option>
-      <option value="starstorm001">Starstorm (Relic)</option>
-      <option value="smerd001">Smerd (Junk Food)</option>
-      <option value="roxxie001">Roxxie (Maps)</option>
-      <option value="melody001">Melody (Music)</option>
-      <option value="icicle001">Icicle (Memory)</option>
-    </select>
-    <button id="confirmDragon">Confirm</button>
-  </div>
-
-  <div id="exploreTab" class="tab-pane">
-    <div id="explorationSection">
-      <label for="zoneSelect">Choose a Zone:</label>
-      <select id="zoneSelect">
-        <option value="">-- Select a Zone --</option>
-      </select>
-      <button id="exploreBtn">Explore</button>
-    </div>
-    <div id="discoveryBox" class="book-discovery"></div>
-  </div>
-
-  <div id="challengeTab" class="tab-pane" style="display:none;">
-    <div id="pvpSection">
-      <h3>Challenge Another Dragon</h3>
-      <select id="pvpOpponentDropdown"><option value="">-- Select Opponent --</option></select>
-      <button id="pvpChallengeBtn">Challenge!</button>
-      <p id="pvpResultBox"></p>
-    </div>
-  </div>
-
-  <div id="tradeTab" class="tab-pane" style="display:none;">
-    <div id="tradeSection" style="margin-top: 20px;">
-      <h2>Trade Treasures</h2>
-      
-      <div id="createTrade" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
-        <h3>Propose a New Trade</h3>
-        <div>
-          <label for="tradePartnerSelect">Trade with:</label>
-          <select id="tradePartnerSelect">
-            <option value="">-- Select a Player --</option>
-          </select>
-          <button id="loadPlayerHoardsBtn">View Hoards</button>
-        </div>
-        <div id="tradeOfferCreation" style="display: none; margin-top: 10px;">
-          <p><strong>You Offer:</strong></p>
-          <select id="offerItemSelect"></select>
-          <p style="margin-top: 10px;"><strong>You Request:</strong></p>
-          <select id="requestItemSelect"></select>
-          <button id="proposeTradeBtn" style="margin-top: 15px;">Propose Trade</button>
-          <p id="tradeProposalResult"></p>
-        </div>
+      <div id="tabNav">
+        <button class="tab-button active" onclick="showTab('explore')">Explore</button>
+        <button class="tab-button" onclick="showTab('challenge')">Challenge</button>
+        <button class="tab-button" onclick="showTab('trade')">Trade</button>
       </div>
-
-      <div id="viewTrades">
-        <h3>Your Trade Offers</h3>
-        <h4>Incoming Offers (From other players)</h4>
-        <ul id="incomingOffersList"></ul>
-        <h4>Outgoing Offers (Sent by you)</h4>
-        <ul id="outgoingOffersList"></ul>
-      </div>
-    </div>
-  </div>
-</div>
-    
-    <div id="socialPanel" class="dashboard-column">
-      <h2>World Events</h2>
-      
-      <div id="leaderboard"></div>
-
-      <div id="eventLog"></div>
-    </div>
-    
-  </div> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="./firebase.js"></script>
-  <script src="./main.js"></script>
-</body>
-</html>
+      <div id="tabContent">
+        <div id="dragonSelection" style="display:none;">
+            <h3>Choose Your Dragon</h3>
+            <select id="dragonDropdown">
+                <option value="">-- Select a Dragon --</option><option value="spitfire001">Spitfire (Tech)</option><option value
 
 
 
