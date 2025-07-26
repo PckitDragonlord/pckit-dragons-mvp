@@ -206,41 +206,44 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Exploration & Combat ---
   
-  exploreBtn.onclick = async () => {
-    const zoneId = zoneSelect.value;
-    if (!zoneId) {
-      alert('Please select a zone first!');
-      return;
+// TEMPORARY DEBUGGING FUNCTION
+exploreBtn.onclick = async () => {
+  const selectedZone = zoneSelect.value;
+  if (!selectedZone) {
+    alert('Please select a zone first!');
+    return;
+  }
+
+  console.clear(); // Clears the console for fresh output
+  console.log(`--- STARTING DEBUG ---`);
+  console.log(`You selected Zone ID: '${selectedZone}'`);
+  
+  console.log(`Fetching ALL books from the database to check their zone IDs...`);
+
+  const snapshot = await db.collection('adventureBooks').get();
+  
+  let foundBooksInZone = 0;
+  
+  snapshot.forEach(doc => {
+    const book = doc.data();
+    const bookZone = book.zoneId;
+
+    // We will print every book's zone ID
+    console.log(`- Title: ${book.title}, Zone ID: '${bookZone}'`);
+
+    // We will also check if it matches the selection
+    if (bookZone === selectedZone) {
+      console.log(`  ✅ MATCH! This book should appear.`);
+      foundBooksInZone++;
     }
-    document.body.style.backgroundImage = `url('/zones/${zoneId}.png')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundAttachment = 'fixed';
+  });
 
-    const booksRef = db.collection('adventureBooks').where('zoneId', '==', zoneId);
-    const snapshot = await booksRef.get();
-    const books = [];
-    snapshot.forEach(doc => books.push({ id: doc.id, ...doc.data() }));
-
-    if (books.length === 0) {
-      discoveryBox.innerHTML = `<p>No adventure books available in this zone.</p>`;
-      return;
-    }
-    const randomIndex = Math.floor(Math.random() * books.length);
-    currentBook = books[randomIndex];
-
-    discoveryBox.innerHTML = `
-      <div class="book-card">
-        <img src="/adventurebooks/${currentBook.id}.png" alt="Cover for ${currentBook.title}" class="book-cover-art">
-        <h3>${currentBook.title}</h3>
-        <p><strong>Rarity:</strong> ${currentBook.rarity}</p>
-        <p><strong>Difficulty:</strong> ${currentBook.difficulty}</p>
-        <button id="resolveBtn">Resolve Adventure</button>
-        <p id="combatResult"></p>
-      </div>
-    `;
-    document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
-  };
+  console.log(`--- DEBUG COMPLETE ---`);
+  console.log(`Found a total of ${foundBooksInZone} books matching '${selectedZone}'.`);
+  
+  // We will stop the function here so it doesn't try to render anything yet.
+  alert("Debug test finished. Check the browser console (F12) for results.");
+};
 
   function getDifficultyTarget(difficulty, hoardScore) {
     switch ((difficulty || '').toLowerCase()) {
