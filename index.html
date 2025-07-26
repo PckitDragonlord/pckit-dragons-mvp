@@ -86,6 +86,32 @@
   display: inline-block; 
   vertical-align: middle;
 }
+
+    /* Update the list item to stack content vertically */
+#hoardList li {
+  position: relative;
+  border: 1px solid #4e6a85;
+  border-radius: 5px;
+  background-color: #34495e;
+  display: flex;
+  flex-direction: column; /* Stack image and name */
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  box-sizing: border-box; /* Ensures padding is included in the size */
+}
+
+/* NEW: Styling for the treasure name caption */
+.hoard-item-name {
+  font-size: 10px;
+  color: #bdc3c7;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap; /* Prevent long names from wrapping */
+  overflow: hidden; /* Hide any overflow */
+  text-overflow: ellipsis; /* Add '...' for very long names */
+  margin-top: 4px;
+}
   </style>
 </head>
 <body>
