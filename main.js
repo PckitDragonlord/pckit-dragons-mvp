@@ -79,7 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
-  firebase.auth().onAuthStateChanged(async (user) => {
+ firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
       try {
         currentUser = user;
@@ -131,11 +131,13 @@ window.addEventListener('DOMContentLoaded', () => {
           displayNameInput.value = updatedPlayerDoc.data().displayName;
         }
 
+        // This block loads all the dynamic data when a player signs in.
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
         await loadTradePartners(user.uid);
         listenForTradeOffers(user.uid);
+        loadLeaderboard(); // <-- ADD THIS LINE
         await updateHoardDisplay(user.uid);
 
       } catch (error) {
@@ -149,20 +151,6 @@ window.addEventListener('DOMContentLoaded', () => {
       signOutBtn.style.display = 'none';
       document.getElementById('displayNameSection').style.display = 'none';
       document.getElementById('dragonSelection').style.display = 'none';
-    }
-  });
-
-  // --- Display Name ---
-  saveDisplayNameBtn.addEventListener('click', async () => {
-    const displayName = displayNameInput.value.trim();
-    if (!displayName || !currentUser) return;
-    try {
-      await db.collection('players').doc(currentUser.uid).set({ displayName: displayName }, { merge: true });
-      alert("Display name saved!");
-      await loadPvPOpponents(currentUser.uid);
-      await loadTradePartners(currentUser.uid);
-    } catch (error) {
-      console.error("Error saving display name:", error);
     }
   });
 
