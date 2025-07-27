@@ -193,8 +193,6 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- Exploration & Combat ---
-  
-// Restore the original, working exploreBtn.onclick function
 exploreBtn.onclick = async () => {
   const zoneId = zoneSelect.value;
   if (!zoneId) {
@@ -234,6 +232,32 @@ exploreBtn.onclick = async () => {
   document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
 };
 
+function getDifficultyTarget(difficulty, hoardScore) {
+  // This function calculates the challenge rating based on the book's difficulty
+  switch ((difficulty || '').toLowerCase()) {
+    case 'easy': return hoardScore * 1.5;
+    case 'moderate': return hoardScore * 2.5;
+    case 'hard': return hoardScore * 3.5;
+    case 'extreme': return hoardScore * 5;
+    default: return hoardScore * 3;
+  }
+}
+
+async function resolveAdventureWithCombat(book, userId) {
+  // This function handles the combat logic when the button is clicked
+  const hoardScore = await updateHoardDisplay(userId);
+  const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
+  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
+  const resultBox = document.getElementById('combatResult');
+
+  if (playerRoll >= enemyRoll) {
+    resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
+    await dropRandomTreasureAndAddToHoard(userId);
+  } else {
+    resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
+  }
+}
+  
   // --- Hoard & Treasure Management ---
   async function dropRandomTreasureAndAddToHoard(userId) {
     const treasureSnapshot = await db.collection("treasures").get();
