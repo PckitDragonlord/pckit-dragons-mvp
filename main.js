@@ -232,23 +232,29 @@ exploreBtn.onclick = async () => {
   document.getElementById('resolveBtn').onclick = () => resolveAdventureWithCombat(currentBook, currentUser.uid);
 };
 
-function getDifficultyTarget(difficulty, hoardScore) {
-  // This function calculates the challenge rating based on the book's difficulty
+// REPLACE this function
+function getDifficultyTarget(difficulty) {
+  // Returns a static challenge value instead of a multiplier
   switch ((difficulty || '').toLowerCase()) {
-    case 'easy': return hoardScore * 1.5;
-    case 'moderate': return hoardScore * 2.5;
-    case 'hard': return hoardScore * 3.5;
-    case 'extreme': return hoardScore * 5;
-    default: return hoardScore * 3;
+    case 'easy': return 25;      // Low base score for the enemy
+    case 'moderate': return 60;     // Medium base score
+    case 'hard': return 100;     // High base score
+    case 'extreme': return 150;    // Very high base score
+    default: return 75;
   }
 }
 
+// REPLACE this function
 async function resolveAdventureWithCombat(book, userId) {
-  // This function handles the combat logic when the button is clicked
   const hoardScore = await updateHoardDisplay(userId);
+  // Player's roll is their score + a random number up to 100
   const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
-  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty, hoardScore);
+  
+  // Enemy's roll is a STATIC difficulty value + a random number up to 100
+  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty);
+  
   const resultBox = document.getElementById('combatResult');
+  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll}`); // For debugging
 
   if (playerRoll >= enemyRoll) {
     resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
