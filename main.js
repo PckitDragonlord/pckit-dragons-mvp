@@ -326,6 +326,25 @@ exploreBtn.onclick = async () => {
     return 0;
   }
 
+// --- Leaderboard ---
+function loadLeaderboard() {
+  const leaderboardList = document.getElementById('leaderboardList');
+  const query = db.collection('players')
+    .orderBy('hoardScore', 'desc')
+    .limit(5);
+
+  // Use onSnapshot for a real-time leaderboard
+  query.onSnapshot(snapshot => {
+    leaderboardList.innerHTML = ''; // Clear the list before repopulating
+    snapshot.forEach(doc => {
+      const playerData = doc.data();
+      const li = document.createElement('li');
+      li.textContent = `${playerData.displayName || 'Unnamed Dragon'} - Score: ${playerData.hoardScore}`;
+      leaderboardList.appendChild(li);
+    });
+  });
+}
+  
   // --- PvP ---
   async function loadPvPOpponents(currentUserId) {
     pvpDropdown.innerHTML = `<option value="">-- Select Opponent --</option>`;
