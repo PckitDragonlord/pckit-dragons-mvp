@@ -386,37 +386,44 @@ function loadLeaderboard() {
     });
   }
   
-  pvpChallengeBtn.onclick = async () => {
-    const opponentId = pvpDropdown.value;
-    if (!opponentId) {
-      pvpResultBox.textContent = "Please select an opponent first.";
-      return;
-    }
-    pvpChallengeBtn.disabled = true;
-    pvpResultBox.textContent = "Challenging...";
-    try {
-      const playerSnap = await db.collection("players").doc(currentUser.uid).get();
-      const playerScore = await calculateHoardScore(playerSnap.data());
-      const opponentSnap = await db.collection("players").doc(opponentId).get();
-      const opponentScore = await calculateHoardScore(opponentSnap.data());
-      const playerRoll = Math.floor(Math.random() * 100) + playerScore;
-      const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
-      let resultText = `You (${playerSnap.data().displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentSnap.data().displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
-      if (playerRoll > opponentRoll) {
-        resultText += "You win! 🎉 You found a new treasure!";
-        await dropRandomTreasureAndAddToHoard(currentUser.uid);
-      } else if (playerRoll < opponentRoll) {
-        resultText += "You lose! Better luck next time.";
-      } else {
-        resultText += "It's a tie!";
-      }
-      pvpResultBox.textContent = resultText;
-    } catch (error) {
-      console.error("PvP challenge failed:", error);
-    } finally {
-      pvpChallengeBtn.disabled = false;
-    }
-  };
+ // REPLACE this function
+pvpChallengeBtn.onclick = async () => {
+  const opponentId = pvpDropdown.value;
+  if (!opponentId) {
+    pvpResultBox.textContent = "Please select an opponent first.";
+    return;
+  }
+  pvpChallengeBtn.disabled = true;
+  pvpResultBox.textContent = "Challenging...";
+  try {
+    const playerSnap = await db.collection("players").doc(currentUser.uid).get();
+    const playerScore = await calculateHoardScore(playerSnap.data());
+    const opponentSnap = await db.collection("players").doc(opponentId).get();
+    const opponentScore = await calculateHoardScore(opponentSnap.data());
+    const playerRoll = Math.floor(Math.random() * 100) + playerScore;
+    const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
+    let resultText = `You (${playerSnap.data().displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentSnap.data().displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
+
+    // UPDATED: This block now gets the dropped treasure's name for the message
+    if (playerRoll > opponentRoll) {
+      const droppedTreasure = await dropRandomTreasureAndAddToHoard(currentUser.uid);
+      if (droppedTreasure) {
+        resultText += `You win! 🎉 You found a ${droppedTreasure.name}!`;
+      } else {
+        resultText += "You win! 🎉 You found a new treasure!";
+      }
+    } else if (playerRoll < opponentRoll) {
+      resultText += "You lose! Better luck next time.";
+    } else {
+      resultText += "It's a tie!";
+    }
+    pvpResultBox.textContent = resultText;
+  } catch (error) {
+    console.error("PvP challenge failed:", error);
+  } finally {
+    pvpChallengeBtn.disabled = false;
+  }
+};
 
   // --- Trading System ---
   async function loadTradePartners(currentUserId) {
