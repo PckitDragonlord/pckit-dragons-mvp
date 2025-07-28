@@ -269,22 +269,24 @@ function getDifficultyTarget(difficulty) {
 
 // REPLACE this function
 async function resolveAdventureWithCombat(book, userId) {
-  const hoardScore = await updateHoardDisplay(userId);
-  // Player's roll is their score + a random number up to 100
-  const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
-  
-  // Enemy's roll is a STATIC difficulty value + a random number up to 100
-  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty);
-  
-  const resultBox = document.getElementById('combatResult');
-  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll}`); // For debugging
+  const hoardScore = await updateHoardDisplay(userId);
+  // Player's roll is their full score + a random number
+  const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
+  
+  // The enemy's roll is a FRACTION of the player's score, plus the adventure's static difficulty, plus a random number.
+  // This keeps the fight relevant, but the player always has a built-in advantage.
+  const enemyBaseScore = (hoardScore * 0.75) + getDifficultyTarget(book.difficulty);
+  const enemyRoll = Math.floor(Math.random() * 100) + enemyBaseScore;
+  
+  const resultBox = document.getElementById('combatResult');
+  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll.toFixed(0)} (Base: ${enemyBaseScore.toFixed(0)})`); // For debugging
 
-  if (playerRoll >= enemyRoll) {
-    resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
-    await dropRandomTreasureAndAddToHoard(userId);
-  } else {
-    resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
-  }
+  if (playerRoll >= enemyRoll) {
+    resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
+    await dropRandomTreasureAndAddToHoard(userId);
+  } else {
+    resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
+  }
 }
   
   // --- Hoard & Treasure Management ---
