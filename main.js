@@ -79,11 +79,11 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
+// REPLACE this entire function
 firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
       try {
-        // NEW: Restore default background on login
-        document.body.style.backgroundImage = `url('/zones/zone010.png')`;
+        let isNewPlayer = false; // Flag to check if this is a new player
 
         currentUser = user;
         userInfo.textContent = `Signed in as: ${user.displayName}`;
@@ -96,17 +96,16 @@ firebase.auth().onAuthStateChanged(async (user) => {
         const playerDoc = await playerRef.get();
 
         if (!playerDoc.exists) {
-          isNewPlayer = true;
+          isNewPlayer = true; // Set the flag for new player
+          // ... (rest of the new player creation logic is the same)
           console.log("New player detected. Creating document with starting treasure.");
           const treasureId = "univ003";
           const treasureRef = db.collection("treasures").doc(treasureId);
           const treasureSnap = await treasureRef.get();
-
           if (!treasureSnap.exists) {
             console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
             return;
           }
-
           const startingTreasure = treasureSnap.data();
           const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
           let startingScore = 0;
@@ -134,6 +133,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
           displayNameInput.value = updatedPlayerDoc.data().displayName;
         }
 
+        // Load all game data
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
@@ -142,14 +142,29 @@ firebase.auth().onAuthStateChanged(async (user) => {
         loadLeaderboard();
         await updateHoardDisplay(user.uid);
 
+        // UPDATED: Show video modal AND set up the alert for new players
         if (isNewPlayer) {
-          alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
+          const modal = document.getElementById('videoModal');
+          const closeModalBtn = document.getElementById('closeModalBtn');
+          
+          modal.style.display = 'flex'; // Show the video
+
+          // Add a one-time listener that runs after the video is closed
+          closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none'; // Hide the modal
+            const iframe = modal.querySelector('iframe');
+            iframe.src = iframe.src; // Stop the video
+            
+            // Show the welcome alert AFTER the video is closed
+            alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
+          }, { once: true }); // { once: true } ensures this only ever runs one time
         }
 
       } catch (error) {
         console.error("Error during sign-in logic:", error);
       }
     } else {
+      // ... (logout logic is the same)
       currentUser = null;
       document.body.style.backgroundImage = 'none';
       userInfo.textContent = 'Not signed in';
