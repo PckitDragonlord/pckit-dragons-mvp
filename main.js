@@ -250,37 +250,42 @@ function getDifficultyTarget(difficulty) {
 }
 
 // REPLACE this function
+async function dropRandomTreasureAndAddToHoard(userId) {
+  const treasureSnapshot = await db.collection("treasures").get();
+  const allTreasures = [];
+  treasureSnapshot.forEach(doc => allTreasures.push({ id: doc.id, ...doc.data() }));
+  if (allTreasures.length === 0) return null; // Return null if no treasures exist
+
+  const randomIndex = Math.floor(Math.random() * allTreasures.length);
+  const selectedTreasure = allTreasures[randomIndex];
+  
+  await addTreasureToHoard(userId, selectedTreasure.id);
+  
+  // NEW: Return the dropped treasure's data
+  return selectedTreasure;
+}
+
+// REPLACE this function
 async function resolveAdventureWithCombat(book, userId) {
   const hoardScore = await updateHoardDisplay(userId);
-  // Player's roll is their full score + a random number
   const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
-  
-  // The enemy's roll is a FRACTION of the player's score, plus the adventure's static difficulty, plus a random number.
-  // This keeps the fight relevant, but the player always has a built-in advantage.
-  const enemyBaseScore = (hoardScore * 0.75) + getDifficultyTarget(book.difficulty);
-  const enemyRoll = Math.floor(Math.random() * 100) + enemyBaseScore;
-  
+  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty);
   const resultBox = document.getElementById('combatResult');
-  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll.toFixed(0)} (Base: ${enemyBaseScore.toFixed(0)})`); // For debugging
+
+  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll.toFixed(0)}`);
 
   if (playerRoll >= enemyRoll) {
-    resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
-    await dropRandomTreasureAndAddToHoard(userId);
+    // UPDATED: Now gets the dropped treasure's name for the message
+    const droppedTreasure = await dropRandomTreasureAndAddToHoard(userId);
+    if (droppedTreasure) {
+      resultBox.textContent = `Success! You found a ${droppedTreasure.name} hidden in "${book.title}"!`;
+    } else {
+      resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
+    }
   } else {
     resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
   }
 }
-  
-  // --- Hoard & Treasure Management ---
-  async function dropRandomTreasureAndAddToHoard(userId) {
-    const treasureSnapshot = await db.collection("treasures").get();
-    const allTreasures = [];
-    treasureSnapshot.forEach(doc => allTreasures.push({ id: doc.id, ...doc.data() }));
-    if (allTreasures.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * allTreasures.length);
-    await addTreasureToHoard(userId, allTreasures[randomIndex].id);
-  }
-
   async function addTreasureToHoard(userId, treasureId) {
     const playerRef = db.collection("players").doc(userId);
     const treasureRef = db.collection("treasures").doc(treasureId);
