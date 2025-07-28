@@ -452,62 +452,83 @@ pvpChallengeBtn.onclick = async () => {
     tradeOfferCreation.style.display = 'block';
   };
   
-  proposeTradeBtn.onclick = async () => {
-    const partnerId = tradePartnerSelect.value;
-    const offeredTreasureId = offerItemSelect.value;
-    const requestedTreasureId = requestItemSelect.value;
-    if (!partnerId || !offeredTreasureId || !requestedTreasureId) {
-        tradeProposalResult.textContent = "Please select a partner and both items.";
-        return;
-    }
-    proposeTradeBtn.disabled = true;
-    tradeProposalResult.textContent = "Proposing...";
-    try {
-      await db.collection("trades").add({
-        offeringPlayerId: currentUser.uid,
-        offeringPlayerName: currentUser.displayName,
-        targetPlayerId: partnerId,
-        offeredTreasureId: offeredTreasureId,
-        requestedTreasureId: requestedTreasureId,
-        status: "pending",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      tradeProposalResult.textContent = "Trade offer sent!";
-    } catch (error) {
-      console.error("Error proposing trade: ", error);
-      tradeProposalResult.textContent = "Error sending offer.";
-    } finally {
-      proposeTradeBtn.disabled = false;
-    }
-  };
+ // REPLACE this function
+proposeTradeBtn.onclick = async () => {
+  const partnerId = tradePartnerSelect.value;
+  const offeredTreasureId = offerItemSelect.value;
+  const requestedTreasureId = requestItemSelect.value;
 
-  function listenForTradeOffers(userId) {
-    const incomingQuery = db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending');
-    const outgoingQuery = db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending');
-    
-    const unsubIncoming = incomingQuery.onSnapshot(snapshot => {
-        incomingOffersList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const trade = { id: doc.id, ...doc.data() };
-          const li = document.createElement('li');
-          li.innerHTML = `<span>${trade.offeringPlayerName} wants <strong>${trade.requestedTreasureId}</strong> for their <strong>${trade.offeredTreasureId}</strong>.</span> <button class="accept-trade" data-id="${trade.id}">Accept</button><button class="reject-trade" data-id="${trade.id}">Reject</button>`;
-          incomingOffersList.appendChild(li);
-        });
-      });
-    
-    const unsubOutgoing = outgoingQuery.onSnapshot(snapshot => {
-        outgoingOffersList.innerHTML = '';
-        snapshot.forEach(doc => {
-          const trade = { id: doc.id, ...doc.data() };
-          const li = document.createElement('li');
-          li.innerHTML = `<span>You offered <strong>${trade.offeredTreasureId}</strong> for <strong>${trade.requestedTreasureId}</strong>.</span> <button class="cancel-trade" data-id="${trade.id}">Cancel</button>`;
-          outgoingOffersList.appendChild(li);
-        });
-      });
-      
-    tradeListeners.push(unsubIncoming, unsubOutgoing);
-  }
-  
+  if (!partnerId || !offeredTreasureId || !requestedTreasureId) {
+      tradeProposalResult.textContent = "Please select a partner and both items.";
+      return;
+  }
+  
+  proposeTradeBtn.disabled = true;
+  tradeProposalResult.textContent = "Proposing...";
+  
+  try {
+    // NEW: Fetch treasure names before creating the trade
+    const offeredTreasureRef = db.collection("treasures").doc(offeredTreasureId);
+    const requestedTreasureRef = db.collection("treasures").doc(requestedTreasureId);
+
+    const [offeredSnap, requestedSnap] = await Promise.all([
+        offeredTreasureRef.get(),
+        requestedTreasureRef.get()
+    ]);
+
+    const offeredTreasureName = offeredSnap.exists ? offeredSnap.data().name : offeredTreasureId;
+    const requestedTreasureName = requestedSnap.exists ? requestedSnap.data().name : requestedTreasureId;
+
+    // UPDATED: Add the names to the trade document
+    await db.collection("trades").add({
+      offeringPlayerId: currentUser.uid,
+      offeringPlayerName: currentUser.displayName,
+      targetPlayerId: partnerId,
+      offeredTreasureId: offeredTreasureId,
+      offeredTreasureName: offeredTreasureName, // New field
+      requestedTreasureId: requestedTreasureId,
+      requestedTreasureName: requestedTreasureName, // New field
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    tradeProposalResult.textContent = "Trade offer sent!";
+  } catch (error) {
+    console.error("Error proposing trade: ", error);
+    tradeProposalResult.textContent = "Error sending offer.";
+  } finally {
+    proposeTradeBtn.disabled = false;
+  }
+};
+
+// REPLACE this function
+function listenForTradeOffers(userId) {
+  const incomingQuery = db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending');
+  const outgoingQuery = db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending');
+  
+  const unsubIncoming = incomingQuery.onSnapshot(snapshot => {
+      incomingOffersList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const trade = { id: doc.id, ...doc.data() };
+        const li = document.createElement('li');
+        // UPDATED: Use treasure names instead of IDs
+        li.innerHTML = `<span>${trade.offeringPlayerName} wants <strong>${trade.requestedTreasureName}</strong> for their <strong>${trade.offeredTreasureName}</strong>.</span> <button class="accept-trade" data-id="${trade.id}">Accept</button><button class="reject-trade" data-id="${trade.id}">Reject</button>`;
+        incomingOffersList.appendChild(li);
+      });
+    });
+  
+  const unsubOutgoing = outgoingQuery.onSnapshot(snapshot => {
+      outgoingOffersList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const trade = { id: doc.id, ...doc.data() };
+        const li = document.createElement('li');
+        // UPDATED: Use treasure names instead of IDs
+        li.innerHTML = `<span>You offered <strong>${trade.offeredTreasureName}</strong> for <strong>${trade.requestedTreasureName}</strong>.</span> <button class="cancel-trade" data-id="${trade.id}">Cancel</button>`;
+        outgoingOffersList.appendChild(li);
+      });
+    });
+    
+  tradeListeners.push(unsubIncoming, unsubOutgoing);
+}
   document.body.addEventListener('click', async (e) => {
     const tradeId = e.target.getAttribute('data-id');
     if (!tradeId) return;
