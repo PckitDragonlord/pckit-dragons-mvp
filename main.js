@@ -154,6 +154,20 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+// --- Display Name ---
+  saveDisplayNameBtn.addEventListener('click', async () => {
+    const displayName = displayNameInput.value.trim();
+    if (!displayName || !currentUser) return;
+    try {
+      await db.collection('players').doc(currentUser.uid).set({ displayName: displayName }, { merge: true });
+      alert("Display name saved!");
+      await loadPvPOpponents(currentUser.uid);
+      await loadTradePartners(currentUser.uid);
+    } catch (error) {
+      console.error("Error saving display name:", error);
+    }
+  });
+  
   // --- Dragon & Zone Loading ---
   
   function displayDragon(dragonId) {
