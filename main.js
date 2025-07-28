@@ -79,81 +79,90 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
- firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-      try {
-        currentUser = user;
-        userInfo.textContent = `Signed in as: ${user.displayName}`;
-        signInBtn.style.display = 'none';
-        signOutBtn.style.display = 'inline';
-        document.getElementById('displayNameSection').style.display = 'block';
-        document.getElementById('dragonSelection').style.display = 'block';
+// REPLACE this entire function
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        let isNewPlayer = false; // Flag to check if this is a new player
 
-        const playerRef = db.collection("players").doc(currentUser.uid);
-        const playerDoc = await playerRef.get();
+        currentUser = user;
+        userInfo.textContent = `Signed in as: ${user.displayName}`;
+        signInBtn.style.display = 'none';
+        signOutBtn.style.display = 'inline';
+        document.getElementById('displayNameSection').style.display = 'block';
+        document.getElementById('dragonSelection').style.display = 'block';
 
-        if (!playerDoc.exists) {
-          console.log("New player detected. Creating document with starting treasure.");
-          const treasureId = "univ003";
-          const treasureRef = db.collection("treasures").doc(treasureId);
-          const treasureSnap = await treasureRef.get();
+        const playerRef = db.collection("players").doc(currentUser.uid);
+        const playerDoc = await playerRef.get();
 
-          if (!treasureSnap.exists) {
-            console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
-            return;
-          }
+        if (!playerDoc.exists) {
+          isNewPlayer = true; // Set the flag
+          console.log("New player detected. Creating document with starting treasure.");
+          const treasureId = "univ003";
+          const treasureRef = db.collection("treasures").doc(treasureId);
+          const treasureSnap = await treasureRef.get();
 
-          const startingTreasure = treasureSnap.data();
-          const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
-          let startingScore = 0;
-          switch ((startingTreasure.rarity || '').toLowerCase()) {
-            case 'common': startingScore = 1; break;
-            case 'uncommon': startingScore = 3; break;
-            case 'heroic': startingScore = 6; break;
-            case 'epic': startingScore = 10; break;
-            case 'legendary': startingScore = 20; break;
-            case 'mythic': startingScore = 30; break;
-            default: startingScore = 1;
-          }
-          await playerRef.set({
-            username: user.displayName || "New Player",
-            email: user.email || "",
-            hoard: initialHoard,
-            hoardScore: startingScore,
-            activeDragonId: null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
-        }
+          if (!treasureSnap.exists) {
+            console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
+            return;
+          }
 
-        const updatedPlayerDoc = await playerRef.get();
-        if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
-          displayNameInput.value = updatedPlayerDoc.data().displayName;
-        }
+          const startingTreasure = treasureSnap.data();
+          const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
+          let startingScore = 0;
+          switch ((startingTreasure.rarity || '').toLowerCase()) {
+            case 'common': startingScore = 1; break;
+            case 'uncommon': startingScore = 3; break;
+            case 'heroic': startingScore = 6; break;
+            case 'epic': startingScore = 10; break;
+            case 'legendary': startingScore = 20; break;
+            case 'mythic': startingScore = 30; break;
+            default: startingScore = 1;
+          }
+          await playerRef.set({
+            username: user.displayName || "New Player",
+            email: user.email || "",
+            hoard: initialHoard,
+            hoardScore: startingScore,
+            activeDragonId: null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          // Alert is now handled below
+        }
 
-        // This block loads all the dynamic data when a player signs in.
-        loadPlayerDragon();
-        await loadZones();
-        await loadPvPOpponents(user.uid);
-        await loadTradePartners(user.uid);
-        listenForTradeOffers(user.uid);
-        loadLeaderboard();
-        await updateHoardDisplay(user.uid);
+        const updatedPlayerDoc = await playerRef.get();
+        if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
+          displayNameInput.value = updatedPlayerDoc.data().displayName;
+        }
 
-      } catch (error) {
-        console.error("Error during sign-in logic:", error);
-      }
-    } else {
-      currentUser = null;
-      document.body.style.backgroundImage = 'none';
-      userInfo.textContent = 'Not signed in';
-      signInBtn.style.display = 'inline';
-      signOutBtn.style.display = 'none';
-      document.getElementById('displayNameSection').style.display = 'none';
-      document.getElementById('dragonSelection').style.display = 'none';
-    }
-  });
+        // This block loads all the dynamic data when a player signs in.
+        loadPlayerDragon();
+        await loadZones();
+        await loadPvPOpponents(user.uid);
+        await loadTradePartners(user.uid);
+        listenForTradeOffers(user.uid);
+        loadLeaderboard();
+        await updateHoardDisplay(user.uid);
 
+        // --- MOVED WELCOME ALERT ---
+        // If the new player flag is set, show the alert now.
+        if (isNewPlayer) {
+          alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
+        }
+
+      } catch (error) {
+        console.error("Error during sign-in logic:", error);
+      }
+    } else {
+      currentUser = null;
+      document.body.style.backgroundImage = 'none';
+      userInfo.textContent = 'Not signed in';
+      signInBtn.style.display = 'inline';
+      signOutBtn.style.display = 'none';
+      document.getElementById('displayNameSection').style.display = 'none';
+      document.getElementById('dragonSelection').style.display = 'none';
+    }
+  });
 // --- Display Name ---
   saveDisplayNameBtn.addEventListener('click', async () => {
     const displayName = displayNameInput.value.trim();
