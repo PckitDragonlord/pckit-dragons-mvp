@@ -79,11 +79,11 @@ window.addEventListener('DOMContentLoaded', () => {
     firebase.auth().signOut();
   };
 
-// REPLACE this entire function
-  firebase.auth().onAuthStateChanged(async (user) => {
+firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
       try {
-        let isNewPlayer = false; // Flag to check if this is a new player
+        // NEW: Restore default background on login
+        document.body.style.backgroundImage = `url('/zones/zone010.png')`;
 
         currentUser = user;
         userInfo.textContent = `Signed in as: ${user.displayName}`;
@@ -96,7 +96,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const playerDoc = await playerRef.get();
 
         if (!playerDoc.exists) {
-          isNewPlayer = true; // Set the flag
+          isNewPlayer = true;
           console.log("New player detected. Creating document with starting treasure.");
           const treasureId = "univ003";
           const treasureRef = db.collection("treasures").doc(treasureId);
@@ -127,7 +127,6 @@ window.addEventListener('DOMContentLoaded', () => {
             activeDragonId: null,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-          // Alert is now handled below
         }
 
         const updatedPlayerDoc = await playerRef.get();
@@ -135,7 +134,6 @@ window.addEventListener('DOMContentLoaded', () => {
           displayNameInput.value = updatedPlayerDoc.data().displayName;
         }
 
-        // This block loads all the dynamic data when a player signs in.
         loadPlayerDragon();
         await loadZones();
         await loadPvPOpponents(user.uid);
@@ -144,8 +142,6 @@ window.addEventListener('DOMContentLoaded', () => {
         loadLeaderboard();
         await updateHoardDisplay(user.uid);
 
-        // --- MOVED WELCOME ALERT ---
-        // If the new player flag is set, show the alert now.
         if (isNewPlayer) {
           alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
         }
@@ -163,20 +159,6 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('dragonSelection').style.display = 'none';
     }
   });
-// --- Display Name ---
-  saveDisplayNameBtn.addEventListener('click', async () => {
-    const displayName = displayNameInput.value.trim();
-    if (!displayName || !currentUser) return;
-    try {
-      await db.collection('players').doc(currentUser.uid).set({ displayName: displayName }, { merge: true });
-      alert("Display name saved!");
-      await loadPvPOpponents(currentUser.uid);
-      await loadTradePartners(currentUser.uid);
-    } catch (error) {
-      console.error("Error saving display name:", error);
-    }
-  });
-  
   // --- Dragon & Zone Loading ---
   
   function displayDragon(dragonId) {
