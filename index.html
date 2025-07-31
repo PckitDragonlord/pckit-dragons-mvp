@@ -52,6 +52,21 @@
     padding-bottom: 5px;
   }
 
+.website-link {
+    text-align: center;
+    margin-top: -5px;
+    margin-bottom: 15px;
+  }
+  .website-link a {
+    color: #ecf0f1; /* A softer, less prominent color */
+    text-decoration: none; /* Remove the underline */
+    font-size: 14px;
+    transition: color 0.3s;
+  }
+  .website-link a:hover {
+    color: #fcba03; /* Highlight with your gold color on hover */
+  }
+  
   /* --- UPDATED TAB BUTTON STYLES --- */
   .tab-button {
     background-color: #fcba03; /* New gold/yellow color */
@@ -251,6 +266,15 @@
     
     <div id="activityPanel" class="dashboard-column">
       <h1>P'ckit Dragons</h1>
+
+      <p class="website-link">
+        <a href="http://www.pckitdragons.com" target="_blank" rel="noopener noreferrer">
+          Find story updates, tips, tricks, and game news on our website!
+        </a>
+      </p>
+
+      <div id="tabNav">
+        </div>
       <div id="tabNav">
         <button class="tab-button active" onclick="showTab('explore')">Explore</button>
         <button class="tab-button" onclick="showTab('challenge')">Challenge</button>
