@@ -157,6 +157,13 @@
     border: 2px solid #ecf0f1;
   }
 
+  /* --- NEW: Styling for the game logo --- */
+  .game-logo {
+    width: 100%;
+    height: auto;
+    margin-top: 20px; /* Add some space above the logo */
+  }
+
   /* --- Mobile Responsiveness --- */
   @media (max-width: 800px) {
     .game-dashboard {
@@ -240,7 +247,9 @@
         <ul id="hoardList"></ul>
         <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
       </div>
-    </div> <div id="activityPanel" class="dashboard-column">
+    </div> 
+    
+    <div id="activityPanel" class="dashboard-column">
       <h1>P'ckit Dragons</h1>
       <div id="tabNav">
         <button class="tab-button active" onclick="showTab('explore')">Explore</button>
@@ -296,33 +305,43 @@
             </div>
         </div>
       </div>
-    </div> <div id="socialPanel" class="dashboard-column">
-      <h2>World Events</h2>
-     <div id="leaderboard">
-  <h3>Top 5 Hoards</h3>
-  <ol id="leaderboardList"></ol> </div>
-      <div id="eventLog"></div>
-    </div> </div> <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    </div> 
+    
+    <div id="socialPanel" class="dashboard-column">
+        <h2>World Events</h2>
+        <div id="leaderboard">
+            <h3>Top 5 Hoards</h3>
+            <ol id="leaderboardList"></ol> 
+        </div>
+        <div id="logoContainer">
+            <img src="/ourlogo.png" alt="P'ckit Dragons Logo" class="game-logo">
+        </div>
+        <div id="eventLog"></div>
+    </div> 
+  </div> 
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="./firebase.js"></script>
   <script src="./main.js"></script>
+  
   <div id="videoModal" class="modal-overlay" style="display: none;">
-  <div class="modal-content">
-    <span id="closeModalBtn" class="modal-close-button">&times;</span>
-    <h3>Welcome to P'ckit Dragons!</h3>
-    <div class="video-container">
-      <iframe 
-        width="560" 
-        height="315" 
-        src="https://youtu.be/8fy5G2vWmeM?si=UhLCaJ_IMF8wVryc" 
-        title="YouTube video player" 
-        frameborder="0" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen>
-      </iframe>
+    <div class="modal-content">
+      <span id="closeModalBtn" class="modal-close-button">×</span>
+      <h3>Welcome to P'ckit Dragons!</h3>
+      <div class="video-container">
+        <iframe 
+          width="560" 
+          height="315" 
+          src="https://www.youtube.com/embed/VIDEO_ID2" 
+          title="YouTube video player" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
     </div>
   </div>
-</div>
 </body>
 </html>
