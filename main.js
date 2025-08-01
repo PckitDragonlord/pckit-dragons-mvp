@@ -46,6 +46,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const discoveryBox = document.getElementById('discoveryBox');
   const hoardList = document.getElementById('hoardList');
   const hoardScoreSpan = document.getElementById('hoardScore');
+  const hoardToggleButton = document.getElementById('hoard-toggle-btn');
+  const hoardContainer = document.getElementById('hoard-container');
   const pvpDropdown = document.getElementById('pvpOpponentDropdown');
   const pvpChallengeBtn = document.getElementById('pvpChallengeBtn');
   const pvpResultBox = document.getElementById('pvpResultBox');
@@ -65,6 +67,16 @@ window.addEventListener('DOMContentLoaded', () => {
   let currentBook = null;
   let tradeListeners = []; // To hold our listeners so we can detach them on logout
 
+  // --- UI Interactivity ---
+  hoardToggleButton.addEventListener('click', () => {
+    // Toggle the 'is-hidden' class on the container
+    hoardContainer.classList.toggle('is-hidden');
+
+    // Check if the container is now hidden and update the button text accordingly
+    const isHidden = hoardContainer.classList.contains('is-hidden');
+    hoardToggleButton.textContent = isHidden ? 'Show Hoard' : 'Hide Hoard';
+  });
+
   // --- Authentication ---
 
   signInBtn.onclick = () => {
@@ -81,99 +93,99 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // REPLACE this entire function
 firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-      try {
-        let isNewPlayer = false; // Flag to check if this is a new player
+    if (user) {
+      try {
+        let isNewPlayer = false; // Flag to check if this is a new player
 
-        currentUser = user;
-        userInfo.textContent = `Signed in as: ${user.displayName}`;
-        signInBtn.style.display = 'none';
-        signOutBtn.style.display = 'inline';
-        document.getElementById('displayNameSection').style.display = 'block';
-        document.getElementById('dragonSelection').style.display = 'block';
+        currentUser = user;
+        userInfo.textContent = `Signed in as: ${user.displayName}`;
+        signInBtn.style.display = 'none';
+        signOutBtn.style.display = 'inline';
+        document.getElementById('displayNameSection').style.display = 'block';
+        document.getElementById('dragonSelection').style.display = 'block';
 
-        const playerRef = db.collection("players").doc(currentUser.uid);
-        const playerDoc = await playerRef.get();
+        const playerRef = db.collection("players").doc(currentUser.uid);
+        const playerDoc = await playerRef.get();
 
-        if (!playerDoc.exists) {
-          isNewPlayer = true; // Set the flag for new player
-          // ... (rest of the new player creation logic is the same)
-          console.log("New player detected. Creating document with starting treasure.");
-          const treasureId = "univ003";
-          const treasureRef = db.collection("treasures").doc(treasureId);
-          const treasureSnap = await treasureRef.get();
-          if (!treasureSnap.exists) {
-            console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
-            return;
-          }
-          const startingTreasure = treasureSnap.data();
-          const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
-          let startingScore = 0;
-          switch ((startingTreasure.rarity || '').toLowerCase()) {
-            case 'common': startingScore = 1; break;
-            case 'uncommon': startingScore = 3; break;
-            case 'heroic': startingScore = 6; break;
-            case 'epic': startingScore = 10; break;
-            case 'legendary': startingScore = 20; break;
-            case 'mythic': startingScore = 30; break;
-            default: startingScore = 1;
-          }
-          await playerRef.set({
-            username: user.displayName || "New Player",
-            email: user.email || "",
-            hoard: initialHoard,
-            hoardScore: startingScore,
-            activeDragonId: null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
+        if (!playerDoc.exists) {
+          isNewPlayer = true; // Set the flag for new player
+          // ... (rest of the new player creation logic is the same)
+          console.log("New player detected. Creating document with starting treasure.");
+          const treasureId = "univ003";
+          const treasureRef = db.collection("treasures").doc(treasureId);
+          const treasureSnap = await treasureRef.get();
+          if (!treasureSnap.exists) {
+            console.error("CRITICAL: Starting treasure 'univ003' not found in database!");
+            return;
+          }
+          const startingTreasure = treasureSnap.data();
+          const initialHoard = { [treasureId]: { ...startingTreasure, count: 1 } };
+          let startingScore = 0;
+          switch ((startingTreasure.rarity || '').toLowerCase()) {
+            case 'common': startingScore = 1; break;
+            case 'uncommon': startingScore = 3; break;
+            case 'heroic': startingScore = 6; break;
+            case 'epic': startingScore = 10; break;
+            case 'legendary': startingScore = 20; break;
+            case 'mythic': startingScore = 30; break;
+            default: startingScore = 1;
+          }
+          await playerRef.set({
+            username: user.displayName || "New Player",
+            email: user.email || "",
+            hoard: initialHoard,
+            hoardScore: startingScore,
+            activeDragonId: null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
 
-        const updatedPlayerDoc = await playerRef.get();
-        if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
-          displayNameInput.value = updatedPlayerDoc.data().displayName;
-        }
+        const updatedPlayerDoc = await playerRef.get();
+        if (updatedPlayerDoc.exists && updatedPlayerDoc.data().displayName) {
+          displayNameInput.value = updatedPlayerDoc.data().displayName;
+        }
 
-        // Load all game data
-        loadPlayerDragon();
-        await loadZones();
-        await loadPvPOpponents(user.uid);
-        await loadTradePartners(user.uid);
-        listenForTradeOffers(user.uid);
-        loadLeaderboard();
-        await updateHoardDisplay(user.uid);
+        // Load all game data
+        loadPlayerDragon();
+        await loadZones();
+        await loadPvPOpponents(user.uid);
+        await loadTradePartners(user.uid);
+        listenForTradeOffers(user.uid);
+        loadLeaderboard();
+        await updateHoardDisplay(user.uid);
 
-        // UPDATED: Show video modal AND set up the alert for new players
-        if (isNewPlayer) {
-          const modal = document.getElementById('videoModal');
-          const closeModalBtn = document.getElementById('closeModalBtn');
-          
-          modal.style.display = 'flex'; // Show the video
+        // UPDATED: Show video modal AND set up the alert for new players
+        if (isNewPlayer) {
+          const modal = document.getElementById('videoModal');
+          const closeModalBtn = document.getElementById('closeModalBtn');
+          
+          modal.style.display = 'flex'; // Show the video
 
-          // Add a one-time listener that runs after the video is closed
-          closeModalBtn.addEventListener('click', () => {
-            modal.style.display = 'none'; // Hide the modal
-            const iframe = modal.querySelector('iframe');
-            iframe.src = iframe.src; // Stop the video
-            
-            // Show the welcome alert AFTER the video is closed
-            alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
-          }, { once: true }); // { once: true } ensures this only ever runs one time
-        }
+          // Add a one-time listener that runs after the video is closed
+          closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none'; // Hide the modal
+            const iframe = modal.querySelector('iframe');
+            iframe.src = iframe.src; // Stop the video
+            
+            // Show the welcome alert AFTER the video is closed
+            alert("Welcome! To start your hoard, here is a piece of Magical Gum!");
+          }, { once: true }); // { once: true } ensures this only ever runs one time
+        }
 
-      } catch (error) {
-        console.error("Error during sign-in logic:", error);
-      }
-    } else {
-      // ... (logout logic is the same)
-      currentUser = null;
-      document.body.style.backgroundImage = 'none';
-      userInfo.textContent = 'Not signed in';
-      signInBtn.style.display = 'inline';
-      signOutBtn.style.display = 'none';
-      document.getElementById('displayNameSection').style.display = 'none';
-      document.getElementById('dragonSelection').style.display = 'none';
-    }
-  });
+      } catch (error) {
+        console.error("Error during sign-in logic:", error);
+      }
+    } else {
+      // ... (logout logic is the same)
+      currentUser = null;
+      document.body.style.backgroundImage = 'none';
+      userInfo.textContent = 'Not signed in';
+      signInBtn.style.display = 'inline';
+      signOutBtn.style.display = 'none';
+      document.getElementById('displayNameSection').style.display = 'none';
+      document.getElementById('dragonSelection').style.display = 'none';
+    }
+  });
   // --- Dragon & Zone Loading ---
   
   function displayDragon(dragonId) {
@@ -266,40 +278,40 @@ function getDifficultyTarget(difficulty) {
 
 // REPLACE this function
 async function dropRandomTreasureAndAddToHoard(userId) {
-  const treasureSnapshot = await db.collection("treasures").get();
-  const allTreasures = [];
-  treasureSnapshot.forEach(doc => allTreasures.push({ id: doc.id, ...doc.data() }));
-  if (allTreasures.length === 0) return null; // Return null if no treasures exist
+  const treasureSnapshot = await db.collection("treasures").get();
+  const allTreasures = [];
+  treasureSnapshot.forEach(doc => allTreasures.push({ id: doc.id, ...doc.data() }));
+  if (allTreasures.length === 0) return null; // Return null if no treasures exist
 
-  const randomIndex = Math.floor(Math.random() * allTreasures.length);
-  const selectedTreasure = allTreasures[randomIndex];
-  
-  await addTreasureToHoard(userId, selectedTreasure.id);
-  
-  // NEW: Return the dropped treasure's data
-  return selectedTreasure;
+  const randomIndex = Math.floor(Math.random() * allTreasures.length);
+  const selectedTreasure = allTreasures[randomIndex];
+  
+  await addTreasureToHoard(userId, selectedTreasure.id);
+  
+  // NEW: Return the dropped treasure's data
+  return selectedTreasure;
 }
 
 // REPLACE this function
 async function resolveAdventureWithCombat(book, userId) {
-  const hoardScore = await updateHoardDisplay(userId);
-  const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
-  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty);
-  const resultBox = document.getElementById('combatResult');
+  const hoardScore = await updateHoardDisplay(userId);
+  const playerRoll = Math.floor(Math.random() * 100) + hoardScore;
+  const enemyRoll = Math.floor(Math.random() * 100) + getDifficultyTarget(book.difficulty);
+  const resultBox = document.getElementById('combatResult');
 
-  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll.toFixed(0)}`);
+  console.log(`Player Roll: ${playerRoll} vs Enemy Roll: ${enemyRoll.toFixed(0)}`);
 
-  if (playerRoll >= enemyRoll) {
-    // UPDATED: Now gets the dropped treasure's name for the message
-    const droppedTreasure = await dropRandomTreasureAndAddToHoard(userId);
-    if (droppedTreasure) {
-      resultBox.textContent = `Success! You found a ${droppedTreasure.name} hidden in "${book.title}"!`;
-    } else {
-      resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
-    }
-  } else {
-    resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
-  }
+  if (playerRoll >= enemyRoll) {
+    // UPDATED: Now gets the dropped treasure's name for the message
+    const droppedTreasure = await dropRandomTreasureAndAddToHoard(userId);
+    if (droppedTreasure) {
+      resultBox.textContent = `Success! You found a ${droppedTreasure.name} hidden in "${book.title}"!`;
+    } else {
+      resultBox.textContent = `Success! You found treasure hidden in "${book.title}"!`;
+    }
+  } else {
+    resultBox.textContent = `Quest failed. "${book.title}" was too difficult this time.`;
+  }
 }
   async function addTreasureToHoard(userId, treasureId) {
     const playerRef = db.collection("players").doc(userId);
@@ -403,41 +415,41 @@ function loadLeaderboard() {
   
  // REPLACE this function
 pvpChallengeBtn.onclick = async () => {
-  const opponentId = pvpDropdown.value;
-  if (!opponentId) {
-    pvpResultBox.textContent = "Please select an opponent first.";
-    return;
-  }
-  pvpChallengeBtn.disabled = true;
-  pvpResultBox.textContent = "Challenging...";
-  try {
-    const playerSnap = await db.collection("players").doc(currentUser.uid).get();
-    const playerScore = await calculateHoardScore(playerSnap.data());
-    const opponentSnap = await db.collection("players").doc(opponentId).get();
-    const opponentScore = await calculateHoardScore(opponentSnap.data());
-    const playerRoll = Math.floor(Math.random() * 100) + playerScore;
-    const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
-    let resultText = `You (${playerSnap.data().displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentSnap.data().displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
+  const opponentId = pvpDropdown.value;
+  if (!opponentId) {
+    pvpResultBox.textContent = "Please select an opponent first.";
+    return;
+  }
+  pvpChallengeBtn.disabled = true;
+  pvpResultBox.textContent = "Challenging...";
+  try {
+    const playerSnap = await db.collection("players").doc(currentUser.uid).get();
+    const playerScore = await calculateHoardScore(playerSnap.data());
+    const opponentSnap = await db.collection("players").doc(opponentId).get();
+    const opponentScore = await calculateHoardScore(opponentSnap.data());
+    const playerRoll = Math.floor(Math.random() * 100) + playerScore;
+    const opponentRoll = Math.floor(Math.random() * 100) + opponentScore;
+    let resultText = `You (${playerSnap.data().displayName || "You"}): ${playerRoll.toFixed(0)} vs ${opponentSnap.data().displayName || "Opponent"}: ${opponentRoll.toFixed(0)} → `;
 
-    // UPDATED: This block now gets the dropped treasure's name for the message
-    if (playerRoll > opponentRoll) {
-      const droppedTreasure = await dropRandomTreasureAndAddToHoard(currentUser.uid);
-      if (droppedTreasure) {
-        resultText += `You win! 🎉 You found a ${droppedTreasure.name}!`;
-      } else {
-        resultText += "You win! 🎉 You found a new treasure!";
-      }
-    } else if (playerRoll < opponentRoll) {
-      resultText += "You lose! Better luck next time.";
-    } else {
-      resultText += "It's a tie!";
-    }
-    pvpResultBox.textContent = resultText;
-  } catch (error) {
-    console.error("PvP challenge failed:", error);
-  } finally {
-    pvpChallengeBtn.disabled = false;
-  }
+    // UPDATED: This block now gets the dropped treasure's name for the message
+    if (playerRoll > opponentRoll) {
+      const droppedTreasure = await dropRandomTreasureAndAddToHoard(currentUser.uid);
+      if (droppedTreasure) {
+        resultText += `You win! 🎉 You found a ${droppedTreasure.name}!`;
+      } else {
+        resultText += "You win! 🎉 You found a new treasure!";
+      }
+    } else if (playerRoll < opponentRoll) {
+      resultText += "You lose! Better luck next time.";
+    } else {
+      resultText += "It's a tie!";
+    }
+    pvpResultBox.textContent = resultText;
+  } catch (error) {
+    console.error("PvP challenge failed:", error);
+  } finally {
+    pvpChallengeBtn.disabled = false;
+  }
 };
 
   // --- Trading System ---
@@ -469,80 +481,80 @@ pvpChallengeBtn.onclick = async () => {
   
  // REPLACE this function
 proposeTradeBtn.onclick = async () => {
-  const partnerId = tradePartnerSelect.value;
-  const offeredTreasureId = offerItemSelect.value;
-  const requestedTreasureId = requestItemSelect.value;
+  const partnerId = tradePartnerSelect.value;
+  const offeredTreasureId = offerItemSelect.value;
+  const requestedTreasureId = requestItemSelect.value;
 
-  if (!partnerId || !offeredTreasureId || !requestedTreasureId) {
-      tradeProposalResult.textContent = "Please select a partner and both items.";
-      return;
-  }
-  
-  proposeTradeBtn.disabled = true;
-  tradeProposalResult.textContent = "Proposing...";
-  
-  try {
-    // NEW: Fetch treasure names before creating the trade
-    const offeredTreasureRef = db.collection("treasures").doc(offeredTreasureId);
-    const requestedTreasureRef = db.collection("treasures").doc(requestedTreasureId);
+  if (!partnerId || !offeredTreasureId || !requestedTreasureId) {
+      tradeProposalResult.textContent = "Please select a partner and both items.";
+      return;
+  }
+  
+  proposeTradeBtn.disabled = true;
+  tradeProposalResult.textContent = "Proposing...";
+  
+  try {
+    // NEW: Fetch treasure names before creating the trade
+    const offeredTreasureRef = db.collection("treasures").doc(offeredTreasureId);
+    const requestedTreasureRef = db.collection("treasures").doc(requestedTreasureId);
 
-    const [offeredSnap, requestedSnap] = await Promise.all([
-        offeredTreasureRef.get(),
-        requestedTreasureRef.get()
-    ]);
+    const [offeredSnap, requestedSnap] = await Promise.all([
+        offeredTreasureRef.get(),
+        requestedTreasureRef.get()
+    ]);
 
-    const offeredTreasureName = offeredSnap.exists ? offeredSnap.data().name : offeredTreasureId;
-    const requestedTreasureName = requestedSnap.exists ? requestedSnap.data().name : requestedTreasureId;
+    const offeredTreasureName = offeredSnap.exists ? offeredSnap.data().name : offeredTreasureId;
+    const requestedTreasureName = requestedSnap.exists ? requestedSnap.data().name : requestedTreasureId;
 
-    // UPDATED: Add the names to the trade document
-    await db.collection("trades").add({
-      offeringPlayerId: currentUser.uid,
-      offeringPlayerName: currentUser.displayName,
-      targetPlayerId: partnerId,
-      offeredTreasureId: offeredTreasureId,
-      offeredTreasureName: offeredTreasureName, // New field
-      requestedTreasureId: requestedTreasureId,
-      requestedTreasureName: requestedTreasureName, // New field
-      status: "pending",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    tradeProposalResult.textContent = "Trade offer sent!";
-  } catch (error) {
-    console.error("Error proposing trade: ", error);
-    tradeProposalResult.textContent = "Error sending offer.";
-  } finally {
-    proposeTradeBtn.disabled = false;
-  }
+    // UPDATED: Add the names to the trade document
+    await db.collection("trades").add({
+      offeringPlayerId: currentUser.uid,
+      offeringPlayerName: currentUser.displayName,
+      targetPlayerId: partnerId,
+      offeredTreasureId: offeredTreasureId,
+      offeredTreasureName: offeredTreasureName, // New field
+      requestedTreasureId: requestedTreasureId,
+      requestedTreasureName: requestedTreasureName, // New field
+      status: "pending",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    tradeProposalResult.textContent = "Trade offer sent!";
+  } catch (error) {
+    console.error("Error proposing trade: ", error);
+    tradeProposalResult.textContent = "Error sending offer.";
+  } finally {
+    proposeTradeBtn.disabled = false;
+  }
 };
 
 // REPLACE this function
 function listenForTradeOffers(userId) {
-  const incomingQuery = db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending');
-  const outgoingQuery = db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending');
-  
-  const unsubIncoming = incomingQuery.onSnapshot(snapshot => {
-      incomingOffersList.innerHTML = '';
-      snapshot.forEach(doc => {
-        const trade = { id: doc.id, ...doc.data() };
-        const li = document.createElement('li');
-        // UPDATED: Use treasure names instead of IDs
-        li.innerHTML = `<span>${trade.offeringPlayerName} wants <strong>${trade.requestedTreasureName}</strong> for their <strong>${trade.offeredTreasureName}</strong>.</span> <button class="accept-trade" data-id="${trade.id}">Accept</button><button class="reject-trade" data-id="${trade.id}">Reject</button>`;
-        incomingOffersList.appendChild(li);
-      });
-    });
-  
-  const unsubOutgoing = outgoingQuery.onSnapshot(snapshot => {
-      outgoingOffersList.innerHTML = '';
-      snapshot.forEach(doc => {
-        const trade = { id: doc.id, ...doc.data() };
-        const li = document.createElement('li');
-        // UPDATED: Use treasure names instead of IDs
-        li.innerHTML = `<span>You offered <strong>${trade.offeredTreasureName}</strong> for <strong>${trade.requestedTreasureName}</strong>.</span> <button class="cancel-trade" data-id="${trade.id}">Cancel</button>`;
-        outgoingOffersList.appendChild(li);
-      });
-    });
-    
-  tradeListeners.push(unsubIncoming, unsubOutgoing);
+  const incomingQuery = db.collection('trades').where('targetPlayerId', '==', userId).where('status', '==', 'pending');
+  const outgoingQuery = db.collection('trades').where('offeringPlayerId', '==', userId).where('status', '==', 'pending');
+  
+  const unsubIncoming = incomingQuery.onSnapshot(snapshot => {
+      incomingOffersList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const trade = { id: doc.id, ...doc.data() };
+        const li = document.createElement('li');
+        // UPDATED: Use treasure names instead of IDs
+        li.innerHTML = `<span>${trade.offeringPlayerName} wants <strong>${trade.requestedTreasureName}</strong> for their <strong>${trade.offeredTreasureName}</strong>.</span> <button class="accept-trade" data-id="${trade.id}">Accept</button><button class="reject-trade" data-id="${trade.id}">Reject</button>`;
+        incomingOffersList.appendChild(li);
+      });
+    });
+  
+  const unsubOutgoing = outgoingQuery.onSnapshot(snapshot => {
+      outgoingOffersList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const trade = { id: doc.id, ...doc.data() };
+        const li = document.createElement('li');
+        // UPDATED: Use treasure names instead of IDs
+        li.innerHTML = `<span>You offered <strong>${trade.offeredTreasureName}</strong> for <strong>${trade.requestedTreasureName}</strong>.</span> <button class="cancel-trade" data-id="${trade.id}">Cancel</button>`;
+        outgoingOffersList.appendChild(li);
+      });
+    });
+    
+  tradeListeners.push(unsubIncoming, unsubOutgoing);
 }
   document.body.addEventListener('click', async (e) => {
     const tradeId = e.target.getAttribute('data-id');
