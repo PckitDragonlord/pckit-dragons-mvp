@@ -244,34 +244,44 @@
   .is-hidden {
     display: none;
   }
+
+  /* New CSS for privacy policy link */
+  #socialPanel a {
+    color: #ffffff; /* White text to stand out against the background */
+    text-decoration: underline; /* Optional: Adds an underline for clarity */
+  }
+
+  #socialPanel a:hover {
+    color: #fcba03; /* Gold color on hover, matching your theme */
+  }
 </style>
 </head>
 <body>
 
   <div class="game-dashboard">
     
-  <div id="playerHub" class="dashboard-column">
-  <h2>Your Lair</h2>
-  <div id="dragonDisplay"></div>
-  <div id="playerInfo">
-    <button id="signInBtn">Sign in with Google</button>
-    <button id="signOutBtn" style="display:none;">Sign Out</button>
-    <p id="userInfo">Not signed in</p>
-    <div id="displayNameSection" style="display:none;">
-      <label for="displayNameInput">Set Display Name:</label>
-      <input type="text" id="displayNameInput" placeholder="e.g. FlameLord42">
-      <button id="saveDisplayNameBtn">Save</button>
-    </div>
-  </div>
-  <div id="hoardDisplay">
-    <h3>Your Hoard</h3>
-    <button id="hoard-toggle-btn">Hide Hoard</button>
-    <div id="hoard-container">
-      <ul id="hoardList"></ul>
-      <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
-    </div>
-  </div>
-</div>
+    <div id="playerHub" class="dashboard-column">
+      <h2>Your Lair</h2>
+      <div id="dragonDisplay"></div>
+      <div id="playerInfo">
+        <button id="signInBtn">Sign in with Google</button>
+        <button id="signOutBtn" style="display:none;">Sign Out</button>
+        <p id="userInfo">Not signed in</p>
+        <div id="displayNameSection" style="display:none;">
+          <label for="displayNameInput">Set Display Name:</label>
+          <input type="text" id="displayNameInput" placeholder="e.g. FlameLord42">
+          <button id="saveDisplayNameBtn">Save</button>
+        </div>
+      </div>
+      <div id="hoardDisplay">
+        <h3>Your Hoard</h3>
+        <button id="hoard-toggle-btn">Hide Hoard</button>
+        <div id="hoard-container">
+          <ul id="hoardList"></ul>
+          <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
+        </div>
+      </div>
+    </div> 
     
     <div id="activityPanel" class="dashboard-column">
       <h1>P'ckit Dragons</h1>
