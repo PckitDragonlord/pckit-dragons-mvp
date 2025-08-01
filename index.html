@@ -9,12 +9,10 @@
   /* Basic page styling */
   body {
     background-color: #2c3e50;
-    /* NEW: Default background image */
     background-image: url('/zones/zone010.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    
     color: #fcfafc;
     font-family: sans-serif;
     margin: 0;
@@ -37,13 +35,13 @@
 
   /* Define the column widths using flex properties */
   #playerHub {
-    flex: 1; /* Occupy 1 part of the available space */
+    flex: 1;
   }
   #activityPanel {
-    flex: 2; /* Occupy 2 parts of the space (twice as wide) */
+    flex: 2;
   }
   #socialPanel {
-    flex: 1; /* Occupy 1 part of the space */
+    flex: 1;
   }
 
   h1, h2 {
@@ -52,52 +50,47 @@
     padding-bottom: 5px;
   }
 
-.website-link {
+  .website-link {
     text-align: center;
     margin-top: -5px;
     margin-bottom: 15px;
   }
   .website-link a {
-    color: #ecf0f1; /* A softer, less prominent color */
-    text-decoration: none; /* Remove the underline */
+    color: #ecf0f1;
+    text-decoration: none;
     font-size: 35px;
     transition: color 0.3s;
   }
   .website-link a:hover {
-    color: #fcba03; /* Highlight with your gold color on hover */
+    color: #fcba03;
   }
   
-  /* --- UPDATED TAB BUTTON STYLES --- */
   .tab-button {
-    background-color: #fcba03; /* New gold/yellow color */
+    background-color: #fcba03;
     border: none;
-    color: #000000; /* Black text */
+    color: #000000;
     padding: 10px 20px;
     cursor: pointer;
     font-size: 16px;
     border-radius: 5px 5px 0 0;
     margin-right: 5px;
-    opacity: 0.6; /* Dimmed for inactive tabs */
+    opacity: 0.6;
   }
   
   .tab-button.active {
-    opacity: 1; /* Full brightness for the active tab */
+    opacity: 1;
   }
-  /* --- END UPDATED STYLES --- */
 
-  /* A little spacing for the tab content */
   .tab-pane {
     padding-top: 20px;
   }
 
-  /* Constrains the dragon image to its container */
   #dragonDisplay img {
     width: 100%;
     height: auto;
     border-radius: 5px;
   }
 
-  /* Visual Hoard Grid */
   #hoardList {
     list-style-type: none;
     padding: 0;
@@ -137,7 +130,6 @@
     border-radius: 3px;
   }
   
-  /* Styling for the treasure name caption */
   .hoard-item-name {
     font-size: 13px;
     line-height: 1.2;
@@ -149,18 +141,15 @@
     display: block; 
   }
 
-/* NEW: Reusable class for semi-transparent boxes */
 .content-box {
-  background-color: rgba(118, 114, 219, 0.35); /* Semi-transparent background */
+  background-color: rgba(118, 114, 219, 0.35);
   border: 1px solid #4e6a85;
   border-radius: 8px;
   padding: 15px;
   text-align: center;
 }
 
-/* Update the book-card to use the new class styling */
 .book-card {
-  /* This class now only handles specific spacing */
   margin-top: 15px;
 }
 
@@ -172,32 +161,29 @@
     border: 2px solid #ecf0f1;
   }
 
-  /* --- NEW: Styling for the game logo --- */
   .game-logo {
     width: 100%;
     height: auto;
-    margin-top: 20px; /* Add some space above the logo */
+    margin-top: 20px;
   }
 
-/* --- NEW: Styling for Footer Legal Text --- */
 .legal-footer {
   text-align: center;
-  margin-top: 15px; /* Adds space above the text */
-  font-size: 14px; /* A good readable size */
-  color: #fcfafc;   /* Sets the base text color to light */
+  margin-top: 15px;
+  font-size: 14px;
+  color: #fcfafc;
 }
 
 .legal-footer a {
-  color: #fcfafc;         /* Explicitly makes the link light-colored */
-  text-decoration: underline; /* Makes it clear it's a clickable link */
+  color: #fcfafc;
+  text-decoration: underline;
 }
 
-/* Optional: Add a hover effect consistent with your other links */
 .legal-footer a:hover {
-  color: #fcba03; /* Highlight with your gold color */
+  color: #fcba03;
 }
 
-/* --- NEW STYLES FOR HOARD TOGGLE --- */
+/* --- STYLES FOR HOARD TOGGLE --- */
 #hoard-toggle-btn {
   background-color: #34495e;
   color: #fcfafc;
@@ -222,22 +208,23 @@
   /* --- Mobile Responsiveness --- */
   @media (max-width: 800px) {
     .game-dashboard {
-      flex-direction: column; /* Stack the columns vertically */
+      flex-direction: column;
     }
 
     #playerHub, #activityPanel, #socialPanel {
-      flex: 1; /* Make all columns take up full width */
+      flex: 1;
     }
   }
+
 /* --- Video Modal Styles --- */
 .modal-overlay {
-  position: fixed; /* Sit on top of the page content */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Black background with opacity */
-  z-index: 1000; /* Make sure it's on top */
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -264,7 +251,7 @@
 
 .video-container {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%; /* 16:9 */
   height: 0;
   overflow: hidden;
   max-width: 100%;
@@ -317,8 +304,6 @@
       </p>
 
       <div id="tabNav">
-        </div>
-      <div id="tabNav">
         <button class="tab-button active" onclick="showTab('explore')">Explore</button>
         <button class="tab-button" onclick="showTab('challenge')">Challenge</button>
         <button class="tab-button" onclick="showTab('trade')">Trade</button>
@@ -335,7 +320,7 @@
             <div id="explorationSection">
                 <label for="zoneSelect">Choose a Zone:</label>
                 <select id="zoneSelect"><option value="">-- Select a Zone --</option></select>
-                <button id="exploreBtn">Explore</button>
+              - <button id="exploreBtn">Explore</button>
             </div>
             <div id="discoveryBox" class="book-discovery content-box book-card"></div>
         </div>
