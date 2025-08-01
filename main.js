@@ -79,6 +79,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // --- Authentication ---
 
+signInBtn.addEventListener("click", async () => {
+  console.log("Sign-in button clicked");
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await firebase.auth().signInWithPopup(provider);
+    console.log("Signed in user:", result.user);
+  } catch (error) {
+    console.error("Sign-in error:", error);
+  }
+});
+
+  
   signInBtn.onclick = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
