@@ -149,20 +149,20 @@
     display: block; 
   }
 
-/* NEW: Reusable class for semi-transparent boxes */
-.content-box {
-  background-color: rgba(118, 114, 219, 0.35); /* Semi-transparent background */
-  border: 1px solid #4e6a85;
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
-}
+  /* NEW: Reusable class for semi-transparent boxes */
+  .content-box {
+    background-color: rgba(118, 114, 219, 0.35); /* Semi-transparent background */
+    border: 1px solid #4e6a85;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+  }
 
-/* Update the book-card to use the new class styling */
-.book-card {
-  /* This class now only handles specific spacing */
-  margin-top: 15px;
-}
+  /* Update the book-card to use the new class styling */
+  .book-card {
+    /* This class now only handles specific spacing */
+    margin-top: 15px;
+  }
 
   .book-cover-art {
     max-width: 200px;
@@ -189,55 +189,61 @@
       flex: 1; /* Make all columns take up full width */
     }
   }
-/* --- Video Modal Styles --- */
-.modal-overlay {
-  position: fixed; /* Sit on top of the page content */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8); /* Black background with opacity */
-  z-index: 1000; /* Make sure it's on top */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
-.modal-content {
-  background-color: #2c3e50;
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #fcba03;
-  position: relative;
-  max-width: 90%;
-}
+  /* --- Video Modal Styles --- */
+  .modal-overlay {
+    position: fixed; /* Sit on top of the page content */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Black background with opacity */
+    z-index: 1000; /* Make sure it's on top */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-.modal-close-button {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  color: #fff;
-  font-size: 30px;
-  font-weight: bold;
-  cursor: pointer;
-}
+  .modal-content {
+    background-color: #2c3e50;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #fcba03;
+    position: relative;
+    max-width: 90%;
+  }
 
-.video-container {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  height: 0;
-  overflow: hidden;
-  max-width: 100%;
-  background: #000;
-}
+  .modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #fff;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+  }
 
-.video-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
+  .video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    max-width: 100%;
+    background: #000;
+  }
+
+  .video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* New CSS for hoard toggle */
+  .is-hidden {
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -259,8 +265,11 @@
       </div>
       <div id="hoardDisplay">
         <h3>Your Hoard</h3>
-        <ul id="hoardList"></ul>
-        <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
+        <button id="hoard-toggle-btn">Hide Hoard</button>
+        <div id="hoard-container">
+          <ul id="hoardList"></ul>
+          <p><strong>Hoard Score:</strong> <span id="hoardScore">0</span></p>
+        </div>
       </div>
     </div> 
     
@@ -273,8 +282,6 @@
         </a>
       </p>
 
-      <div id="tabNav">
-        </div>
       <div id="tabNav">
         <button class="tab-button active" onclick="showTab('explore')">Explore</button>
         <button class="tab-button" onclick="showTab('challenge')">Challenge</button>
